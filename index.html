@@ -1602,34 +1602,35 @@ button.go:disabled { opacity: .45; cursor: not-allowed; }
 .quest-win[hidden] { display: none !important; }
 .quest-win-card { width: min(980px, 100%); max-height: 100%; display: flex; flex-direction: column; background: linear-gradient(180deg, #16223a, #0f1828); border: 2px solid #4b6fa8; border-radius: 16px; box-shadow: 0 18px 50px rgba(0,0,0,.55); overflow: hidden; text-align: left; }
 .quest-win-head { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "step x" "title x"; gap: 2px 12px; padding: 18px 22px 14px; border-bottom: 1px solid #2b3c58; }
-.quest-win-step { grid-area: step; font-size: 1rem; color: #9fb0c8; }
-.quest-win-head h2 { grid-area: title; margin: 0; font-size: 1.7rem; line-height: 1.3; color: #ffd36b; }
+.quest-win-step { grid-area: step; font-size: .9rem; color: #9fb0c8; }
+.quest-win-head h2 { grid-area: title; margin: 0; font-size: 1.45rem; line-height: 1.3; color: #ffd36b; }
 .quest-win-x { grid-area: x; align-self: start; font: inherit; font-size: 1rem; font-weight: 700; padding: 8px 14px; border-radius: 10px; border: 1px solid #4b6fa8; background: #1a2436; color: #e6ecf5; cursor: pointer; }
+.quest-win-x { font-size: .9rem; padding: 6px 12px; }
 .quest-win-x:hover { background: #24324b; }
 .quest-win-body { overflow: auto; padding: 18px 22px 22px; display: flex; flex-direction: column; gap: 14px; }
-.quest-win-what { margin: 0; font-size: 1.25rem; line-height: 1.75; color: #f1f5fb; }
+.quest-win-what { margin: 0; font-size: 1.08rem; line-height: 1.75; color: #f1f5fb; }
 .quest-win-tips { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 10px; background: #0f1724; border: 1px solid #2b3c58; }
-.quest-win-tips p { margin: 0; font-size: 1.05rem; line-height: 1.65; color: #cfd9ea; }
-.quest-win-state { padding: 10px 14px; border-radius: 10px; background: #13261c; border: 2px solid #4fd18b; color: #b8f5cf; font-size: 1.2rem; font-weight: 700; animation: questPop .5s ease; }
+.quest-win-tips p { margin: 0; font-size: .95rem; line-height: 1.65; color: #cfd9ea; }
+.quest-win-state { padding: 10px 14px; border-radius: 10px; background: #13261c; border: 2px solid #4fd18b; color: #b8f5cf; font-size: 1.05rem; font-weight: 700; animation: questPop .5s ease; }
 .quest-win-state[hidden] { display: none !important; }
 .quest-win-proof { padding: 10px 14px; border-radius: 10px; background: #101b2c; border: 1px solid #3b5a86; display: flex; flex-direction: column; gap: 6px; }
 .quest-win-proof[hidden] { display: none !important; }
-.quest-proof-head { color: #ffd36b; font-size: 1rem; }
+.quest-proof-head { color: #ffd36b; font-size: .92rem; }
 .quest-proof-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.quest-proof-list li { font-size: .95rem; line-height: 1.55; color: #dfe7f3; overflow-wrap: anywhere; }
+.quest-proof-list li { font-size: .88rem; line-height: 1.55; color: #dfe7f3; overflow-wrap: anywhere; }
 .quest-proof-link { color: #8cc4ff; }
 .quest-proof-said { color: #e9eef7; }
 q.quest-proof-said { quotes: "「" "」"; }
 :lang(en) q.quest-proof-said, html[lang="en"] q.quest-proof-said { quotes: "\201C" "\201D"; }
 a.quest-proof-said { color: #8cc4ff; }
 .quest-win-act:empty { display: none; }
-.quest-win-go { font-size: 1.2rem; padding: 12px 22px; border-radius: 12px; }
+.quest-win-go { font-size: 1.05rem; padding: 10px 20px; border-radius: 12px; }
 /* 中に移したパネル（もとは小さな字）は、窓の中では大きく見せる */
-.quest-win-slot.robot { margin: 0; padding: 0; border: none; gap: 10px; zoom: 1.32; }
+.quest-win-slot.robot { margin: 0; padding: 0; border: none; gap: 10px; zoom: 1.12; }
 .quest-win-slot:empty { display: none; }
 .quest-win-slot .quest-say { font-size: .95rem; }
 .quest-win-foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 22px; border-top: 1px solid #2b3c58; background: #0f1724; }
-.quest-win-back, .quest-win-next { font-size: 1.05rem; padding: 10px 16px; border-radius: 10px; }
+.quest-win-back, .quest-win-next { font-size: .95rem; padding: 8px 14px; border-radius: 10px; }
 .quest-win-back { color: #e6ecf5; border: 1px solid #4b6fa8; background: #1a2436; }
 .quest-win-back:hover { background: #24324b; }
 .quest-win-next[hidden] { display: none !important; }
@@ -1638,7 +1639,7 @@ a.quest-proof-said { color: #8cc4ff; }
   .quest-win { padding: 54px 8px 8px; }
   .quest-win-head { padding: 14px 14px 10px; } .quest-win-head h2 { font-size: 1.35rem; }
   .quest-win-body { padding: 14px; } .quest-win-what { font-size: 1.08rem; } .quest-win-tips p { font-size: .98rem; }
-  .quest-win-slot.robot { zoom: 1.12; }
+  .quest-win-slot.robot { zoom: 1; }
   .quest-win-foot { padding: 10px 14px; flex-wrap: nowrap; }
   .quest-win-back, .quest-win-next { flex: 1 1 0; font-size: .88rem; padding: 9px 10px; }
 }
@@ -1649,7 +1650,7 @@ a.quest-proof-said { color: #8cc4ff; }
 .owner-warn[hidden] { display: none !important; }
 .owner-warn b { color: #ffc29a; font-size: 1rem; }
 .owner-warn p { margin: 0; font-size: .86rem; line-height: 1.65; }
-.quest-win-body .owner-warn b { font-size: 1.15rem; } .quest-win-body .owner-warn p { font-size: 1.02rem; }
+.quest-win-body .owner-warn b { font-size: 1.02rem; } .quest-win-body .owner-warn p { font-size: .93rem; }
 .reset-btn { align-self: flex-start; font: inherit; font-size: .85rem; font-weight: 700; padding: 7px 14px; border-radius: 8px; border: 1px solid #ff9a5c; background: #2a1810; color: #ffd2b5; cursor: pointer; }
 .reset-btn:hover { background: #3a2216; }
 .reset-btn.arm { background: #b5401f; border-color: #ffb08a; color: #fff; }
@@ -1688,7 +1689,7 @@ a.quest-proof-said { color: #8cc4ff; }
 
 /* 2026-10-18: 届いた手紙を見つけやすく */
 #mailLetters:not([hidden]) { border: 2px solid #ffd36b; border-radius: 10px; padding: 8px 10px; background: #1c1a10; }
-.quest-win-sub { font-size: 1rem; padding: 9px 14px; border-radius: 10px; color: #ffe9a8; border: 1px solid #ffd36b; background: #2a2410; cursor: pointer; margin-right: 8px; }
+.quest-win-sub { font-size: .92rem; padding: 8px 12px; border-radius: 10px; color: #ffe9a8; border: 1px solid #ffd36b; background: #2a2410; cursor: pointer; margin-right: 8px; }
 .quest-win-act { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* 2026-10-18: 修了証 */
