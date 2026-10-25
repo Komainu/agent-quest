@@ -19062,7 +19062,10 @@ AQ.config.rpcUrl = "https://base-mainnet.g.alchemy.com/v2/alch_CDemr6EAp6uvGU9xR
   }
   /* この署名（nonce）の支払いが、もうチェーンに載ったか（USDC の authorizationState。Base の記録そのもの） */
   var SEL_AUTH_STATE = '0xe94a0102';   // authorizationState(address,bytes32)
-  var TIMING = { first: 60000, paid: 45000, gap: 3000, tries: 6 };   // テストでは短くする（_timing）
+  /* ★ 2026-10-25 待ち時間を短く（利用者の報告：お店が止まっていると待たされる時間が長い）。
+     署名のあとの支払いは、ふつう数秒で返事が来るので 20 秒で見切り、Base の記録を約 6 秒だけ確かめる。
+     最初の 402 は、窓を開いたときにお店を起こしておく（wake）ので 40 秒まで */
+  var TIMING = { first: 40000, paid: 20000, gap: 3000, tries: 3 };   // テストでは短くする（_timing）
   function authUsed(acc, nonce) {
     return W().rpc('eth_call', [{ to: USDC, data: SEL_AUTH_STATE + n64(acc) + String(nonce).replace(/^0x/, '') }, 'latest'])
       .then(function (r) { return !!r && r !== '0x' && BigInt(r) !== 0n; });
@@ -19324,7 +19327,7 @@ AQ.config.rpcUrl = "https://base-mainnet.g.alchemy.com/v2/alch_CDemr6EAp6uvGU9xR
       acc = a;
       tick('errand.asking', { shop: hostOf(url) });
       x.t0 = Date.now();
-      /* 寝ているお店（無料のサーバー）は起きるのに時間がかかるので、最初の1回は 60 秒まで待つ */
+      /* 寝ているお店（無料のサーバー）は起きるのに時間がかかるので、最初の1回は少し長めに待つ（窓を開いたときに起こしてある） */
       return fetchT(url, TIMING.first).catch(function (e) {
         if (e && e.net) { var eA = new Error('shop silent'); eA.aq = e.timeout ? 'errand.shopSlow' : 'errand.shopDown'; eA.vars = { shop: hostOf(url), sec: Math.round(TIMING.first / 1000) }; throw eA; }
         throw e;
@@ -19403,8 +19406,20 @@ AQ.config.rpcUrl = "https://base-mainnet.g.alchemy.com/v2/alch_CDemr6EAp6uvGU9xR
      「ニュースを買う」の窓に「値段」のタブと、前に買った値段の結果が出ていて分かりにくい）。
      固定中はお店のタブを隠し、結果もそのお店で買ったものだけを見せる。 */
   var lockShop = null;
+  /* お店を前もって起こしておく（無料のサーバーは、しばらく使われないと眠る）。
+     返事は見ない。5 分に 1 回まで */
+  var woke = {};
+  function wake(k) {
+    var S = SHOPS[k]; if (!S || !S.resource) return;
+    var o; try { o = new URL(S.resource).origin; } catch (e) { return; }
+    if (!/\.onrender\.com$/.test(new URL(o).host)) return;   // 眠るのは無料のサーバーだけ
+    if (woke[o] && Date.now() - woke[o] < 300000) return;
+    woke[o] = Date.now();
+    try { fetch(o + '/', { mode: 'no-cors', cache: 'no-store' }).catch(function () {}); } catch (e) {}
+  }
   function lock(k) {
     lockShop = (k && SHOPS[k]) ? k : null;
+    if (lockShop) wake(lockShop);
     if (lockShop && shopKey !== lockShop) pickShop(lockShop);
     if ($('errandShops')) $('errandShops').style.display = lockShop ? 'none' : '';
     if ($('errandLead')) $('errandLead').style.display = lockShop ? 'none' : '';   // クエストの説明と同じことを2度言わない
