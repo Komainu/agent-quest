@@ -2,5 +2,24 @@
   "buildCommand": "node build.js",
   "installCommand": "echo skip-install",
   "outputDirectory": "deploy",
-  "framework": null
+  "framework": null,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=(), magnetometer=(), gyroscope=(), accelerometer=(), display-capture=(), browsing-topics=()" },
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'; base-uri 'none'; object-src 'none'" },
+        { "key": "Content-Security-Policy-Report-Only", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://technocore.chat https://kibble.world https://mainnet.base.org https://base-mainnet.g.alchemy.com https://base.blockscout.com https://eth.blockscout.com https://optimism.blockscout.com https://x402-seller-pmlm.onrender.com https://pro-api.coingecko.com https://ipfs.io; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'none'" }
+      ]
+    },
+    {
+      "source": "/.well-known/security.txt",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
+      ]
+    }
+  ]
 }
