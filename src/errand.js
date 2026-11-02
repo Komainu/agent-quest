@@ -201,7 +201,7 @@
   var NEWS_PAY_TO = '0x079471E6F43b6feeF80895E19cBFcBB496904852';
   var ALLOW = {
     price: { payTo: SHOPS.price.req.payTo, asset: USDC, network: 'eip155:8453', maxAmount: '10000' },   // 0.01 USDC
-    news:  { payTo: NEWS_PAY_TO,           asset: USDC, network: 'eip155:8453', maxAmount: '10000' }    // 実際は 0.005 USDC。上限 0.01 USDC
+    news:  { payTo: NEWS_PAY_TO,           asset: USDC, network: 'eip155:8453', maxAmount: '10000' }    // 言い値はお店しだい（2026-11 は 0.004 USDC）。上限 0.01 USDC（画面の「0.01 USDC まで」と同じ）
   };
   function lc(a) { return String(a || '').toLowerCase(); }
   /** 支払い条件が、そのお店に許した一覧どおりか。違えば理由（'payTo' など）を返す */
@@ -752,6 +752,7 @@
   AQ.errand = { _timing: function (o) { for (var k in o) TIMING[k] = o[k]; },
     init: init, relabel: relabel,
     /* 検査用 */
+    _allow: ALLOW, _offList: offList,
     SHOPS: SHOPS, REQ: SHOPS.price.req, RESOURCE: SHOPS.price.resource, _typedData: typedData, _paymentHeader: paymentHeader, _withBuilderCode: withBuilderCode,
     _readPrice: function (j) { return SHOPS.price.read(j); }, _readNews: function (j) { return SHOPS.news.read(j); }, pickShop: pickShop, lock: lock,
     _errandEvents: errandEvents, _regFile: regFile, _setUriData: setUriData, _decodeString: decodeString

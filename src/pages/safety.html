@@ -49,7 +49,7 @@
     <ul>
       <li><b>接続</b>（eth_requestAccounts）：アドレスを教えてもらうだけです。</li>
       <li><b>ERC-8004 公式の登録先への取引</b>（eth_sendTransaction）：エージェントの登録（register）、名刺の書き換え（setAgentURI）、ほかのエージェントへの評価（giveFeedback）。どれもお金は送らず、ガス代だけです。</li>
-      <li><b>x402 の支払いの署名</b>（eth_signTypedData_v4）：「ニュースを買う」などを押したときだけ。Base の USDC で、決まったお店に決まった額（例：0.005 USDC）を1回だけ払う署名（EIP-3009 の TransferWithAuthorization）です。お店ごとに受取先と上限をアプリの中に固定してあり、違う条件が来たら署名を頼まずに止めます。期限は最長5分です。</li>
+      <li><b>x402 の支払いの署名</b>（eth_signTypedData_v4）：「ニュースを買う」などを押したときだけ。Base の USDC で、決まったお店に、お店の言い値（ニュースは 0.01 USDC まで）を1回だけ払う署名（EIP-3009 の TransferWithAuthorization）です。お店ごとに受取先と上限をアプリの中に固定してあり、違う条件が来たら署名を頼まずに止めます。期限は最長5分です。</li>
     </ul>
 
     <h2>使うコントラクト（Base）</h2>
@@ -84,7 +84,7 @@
     <ul>
       <li><b>Connect</b> (eth_requestAccounts): only to learn your address.</li>
       <li><b>Transactions to the official ERC-8004 registries</b> (eth_sendTransaction): register an agent (register), update its card (setAgentURI), and rate another agent (giveFeedback). None of them send money; you only pay gas.</li>
-      <li><b>x402 payment signature</b> (eth_signTypedData_v4): only when you press a button such as "buy news". It signs a single payment of a fixed amount (for example 0.005 USDC) in USDC on Base to a fixed shop (EIP-3009 TransferWithAuthorization). Each shop's receiving address and limit are fixed in the app; if the shop asks for anything else, the app stops without asking for a signature. The signature is valid for at most 5 minutes.</li>
+      <li><b>x402 payment signature</b> (eth_signTypedData_v4): only when you press a button such as "buy news". It signs a single payment of the shop's asking price (up to 0.01 USDC for news) in USDC on Base to a fixed shop (EIP-3009 TransferWithAuthorization). Each shop's receiving address and limit are fixed in the app; if the shop asks for anything else, the app stops without asking for a signature. The signature is valid for at most 5 minutes.</li>
     </ul>
 
     <h2>Contracts it uses (Base)</h2>

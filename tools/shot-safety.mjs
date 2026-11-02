@@ -26,6 +26,7 @@ const OWNER = '0x1111111111111111111111111111111111111111';
 const AGENT = { agentId: '4660', name: 'ピクセル', owner: OWNER, tx: '0x' + 'ab'.repeat(32), chain: 8453, t: Date.now() };
 const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const NEWS_PAY_TO = '0x079471E6F43b6feeF80895E19cBFcBB496904852';
+const NEWS_PAY_TO_LC = NEWS_PAY_TO.toLowerCase();
 const REGISTRY = '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432';
 
 let bad = 0;
@@ -54,7 +55,7 @@ async function page0(opts = {}) {
         case 'eth_chainId': return '0x2105';
         case 'eth_getCode': return '0x60806040';
         case 'eth_call': return params[0].data.startsWith('0x70a08231') ? '0x' + n64(500000) : '0x';
-        case 'eth_signTypedData_v4': return '0x' + '12'.repeat(65);
+        case 'eth_signTypedData_v4': (window.__signed = window.__signed || []).push(JSON.parse(params[1])); return '0x' + '12'.repeat(65);
         case 'eth_sendTransaction': return '0x' + 'ab'.repeat(32);
         case 'eth_getTransactionReceipt':
           if (receiptTries++ < 1) return null;
@@ -106,7 +107,8 @@ console.log('\n[2. 支払い先が一覧と違えば、署名を頼まずに中�
 for (const [label, opts, re] of [
   ['受取先が違う', { payTo: '0x2222222222222222222222222222222222222222' }, /受取先/],
   ['お金の種類が違う', { asset: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359' }, /USDC/],
-  ['上限より高い', { amount: '20000' }, /0\.02 USDC/]]) {
+  ['上限より高い', { amount: '20000' }, /0\.02 USDC/],
+  ['上限をわずかに超える（10001）', { amount: '10001' }, /0\.010001 USDC/]]) {
   const { page, shop } = await page0({ agent: AGENT, ...opts });
   await page.click('#startBirth'); await page.waitForTimeout(200);
   await page.click('#robotErrandOpen');
@@ -118,6 +120,39 @@ for (const [label, opts, re] of [
   ok(!(await page.evaluate(() => AQ.confirm.isOpen())), label + '：確認の枠も出さない');
   ok(shop.length === 1 && !shop[0].sig, label + '：お店へは 402 をもらう1回だけ（署名付きでは頼まない）');
   ok(re.test(s) && /お金は動いていません|払わずに中止/.test(s), label + '：正直に知らせる（' + s.slice(0, 60) + '）');
+  await page.close();
+}
+
+console.log('\n[2b. 金額は上限（0.01 USDC）以下なら、言い値が変わっても買える]');
+for (const [amount, price] of [['4000', '0.004'], ['10000', '0.01']]) {
+  const { page, shop } = await page0({ agent: AGENT, amount });
+  await page.click('#startBirth'); await page.waitForTimeout(200);
+  await page.click('#robotErrandOpen');
+  await page.click('#errandShops .robot-chip[data-key="news"]').catch(() => {});
+  await page.click('#errandGo');
+  await page.waitForSelector('.wallet-confirm', { timeout: 15000 }).catch(() => {});
+  const box = await page.evaluate(() => (document.querySelector('.wallet-confirm') || {}).innerText || '');
+  ok(new RegExp('ニュースのお店に ' + price.replace('.', '\\.') + ' USDC を1回だけ払う署名').test(box), amount + '：確認の枠には、お店の言い値（' + price + ' USDC）をそのまま出す');
+  await page.click('.wallet-confirm-ok').catch(() => {});
+  await page.waitForFunction(() => /お使い成功|うまく|中止|受け取/.test(document.getElementById('robotStatus').innerText), null, { timeout: 15000 }).catch(() => {});
+  const signed = await page.evaluate(() => window.__signed || []);
+  ok(signed.length === 1 && signed[0].message.value === amount && signed[0].message.to.toLowerCase() === NEWS_PAY_TO_LC, amount + '：署名する金額は言い値どおり（' + (signed[0] ? signed[0].message.value : 'なし') + '）');
+  ok(shop.filter(x => x.sig).length === 1, amount + '：署名を付けて1回だけ頼む');
+  await page.close();
+}
+{
+  const { page } = await page0({ agent: AGENT });
+  const v = await page.evaluate(() => {
+    const pr = (n) => (Number(n) / 1e6).toString();
+    const out = { max: pr(AQ.errand._allow.news.maxAmount), texts: {} };
+    for (const l of ['ja', 'en']) { AQ.i18n.set(l); out.texts[l] = ['errand.lead.news', 'errand.pick.news.sub', 'errand.go.news', 'quest.cost.usdc', 'quest.news.what'].map(k => AQ.i18n.t(k)); }
+    AQ.i18n.set('ja');
+    return out;
+  });
+  const all = [...v.texts.ja, ...v.texts.en];
+  ok(v.max === '0.01' && all.every(s => s.includes('0.01 USDC')), '画面の説明の「0.01 USDC まで」は、コードの上限（' + v.max + ' USDC）と同じ');
+  ok(!all.some(s => /0\.005/.test(s)), '画面の説明に、変わりうる言い値（0.005 など）を固定で書かない');
+  ok(v.texts.ja.every(s => /まで/.test(s)) && v.texts.en.every(s => /up to/.test(s)), '日本語は「まで」、英語は「up to」で、上限だと分かる書き方');
   await page.close();
 }
 
