@@ -1897,3 +1897,21 @@ button.wz-chip:hover { background: #193324; }
 @media (prefers-reduced-motion: reduce) { .deal-step.now .deal-mark { animation: none; } }
 .memo-result > b, .deal-result > b { color: #ffd36b; font-size: .95rem; }
 .memo-result a, .deal-result a { color: #8cc4ff; }
+
+/* 2026-11-02: ウォレットに頼む前の確認（src/confirm.js）。字の大きさはまわりと同じくらいに */
+.wallet-confirm { margin: 6px 0 10px; padding: 10px 12px; border: 1px solid #4b6fa8; border-radius: 10px; background: #111a2b; color: #e7eaf4; display: flex; flex-direction: column; gap: 6px; }
+.wallet-confirm-kicker { color: #8fc1ff; font-size: .74rem; letter-spacing: .04em; }
+.wallet-confirm-what { color: #ffd36b; font-size: .9rem; }
+.wallet-confirm-rows { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0; font-size: .8rem; }
+.wallet-confirm-rows dt { color: #939bb4; }
+.wallet-confirm-rows dd { margin: 0; overflow-wrap: anywhere; }
+.wallet-confirm-rows a { color: #8fc1ff; }
+.wallet-confirm-note { color: #939bb4; font-size: .74rem; }
+.wallet-confirm-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.wallet-confirm-btns button { font-size: .82rem; }
+
+/* 2026-11-02: ページの下（安全について・GitHub） */
+.site-foot { margin: 18px auto 8px; text-align: center; font-size: .74rem; color: var(--muted); }
+.site-foot a { color: var(--muted); }
+.start-safety { display: block; margin-top: 10px; text-align: center; font-size: .74rem; }
+.start-safety a { color: #939bb4; }

@@ -193,6 +193,28 @@
       }
     }
   };
+  /* ★ 2026-11-02 お店ごとに、払ってよい条件をコードに固定する（MetaMask の誤検知への対応）。
+     402 の返事の中身（受取先 payTo・お金の種類 asset・チェーン network・金額）がこの一覧と違ったら、
+     署名を求めずに中止して、そう知らせる（返事を書き換えられても、知らない相手には払わない）。
+     price … Bazaar に公開されている条件（上の SHOPS.price.req）と同じ
+     news  … 402 の PAYMENT-REQUIRED で確かめた受取先。お店が受取先を変えたら、ここを直すまで買えない */
+  var NEWS_PAY_TO = '0x079471E6F43b6feeF80895E19cBFcBB496904852';
+  var ALLOW = {
+    price: { payTo: SHOPS.price.req.payTo, asset: USDC, network: 'eip155:8453', maxAmount: '10000' },   // 0.01 USDC
+    news:  { payTo: NEWS_PAY_TO,           asset: USDC, network: 'eip155:8453', maxAmount: '10000' }    // 実際は 0.005 USDC。上限 0.01 USDC
+  };
+  function lc(a) { return String(a || '').toLowerCase(); }
+  /** 支払い条件が、そのお店に許した一覧どおりか。違えば理由（'payTo' など）を返す */
+  function offList(sk, req) {
+    var A = ALLOW[sk];
+    if (!A || !req) return 'shop';
+    if (req.scheme !== 'exact') return 'scheme';
+    if (req.network !== A.network) return 'network';
+    if (lc(req.asset) !== lc(A.asset)) return 'asset';
+    if (lc(req.payTo) !== lc(A.payTo)) return 'payTo';
+    if (!/^\d+$/.test(String(req.amount)) || BigInt(req.amount) <= 0n || BigInt(req.amount) > BigInt(A.maxAmount)) return 'amount';
+    return null;
+  }
   var LOG_STORE = 'aq.myAgent.errands';
   var shopKey = 'news';
   var choice = 'base';
@@ -346,11 +368,26 @@
         if (!got) { var e2 = new Error('no requirement'); e2.aq = 'errand.noReq'; throw e2; }
         req = got.req; if (got.resource) resource = got.resource; exts = withBuilderCode(got.extensions);
       }
-      if (Number(req.amount) > 50000) { var e3 = new Error('too expensive'); e3.aq = 'errand.tooMuch'; e3.vars = { price: priceOf(req) }; throw e3; }
+      var off = offList(sk, req);
+      if (off === 'amount' && /^\d+$/.test(String(req.amount))) { var e3 = new Error('too expensive'); e3.aq = 'errand.tooMuch'; e3.vars = { price: priceOf(req), max: priceOf({ amount: ALLOW[sk].maxAmount }) }; throw e3; }
+      if (off) { var e4 = new Error('not on the list: ' + off); e4.aq = 'errand.offList'; e4.vars = { shop: hostOf(url), what: t('errand.off.' + (off === 'amount' ? 'scheme' : off)) }; throw e4; }
       x.price = priceOf(req); x.payTo = req.payTo;
       return usdcBalance(acc);
     }).then(function (bal) {
       if (bal < BigInt(req.amount)) { var e = new Error('low'); e.aq = 'errand.lowUsdc'; e.vars = { price: x.price }; throw e; }
+      /* ★ 2026-11-02 ウォレットに頼む前に、アプリの中で中身を見せる。押すまでウォレットは呼ばない */
+      var secs = Math.min(Number(req.maxTimeoutSeconds) || 60, 300);
+      status('confirm.look');
+      return AQ.confirm.ask({
+        after: $('robotStatus'),
+        what: t('confirm.what.pay', { price: x.price, shop: t('confirm.shop.' + sk) }),
+        rows: [AQ.confirm.party(t('confirm.shop.' + sk), req.payTo),
+               { k: t('confirm.limit'), v: t('confirm.limitPay', { price: x.price }) },
+               { k: t('confirm.expiry'), v: t('confirm.expirySec', { sec: secs }) },
+               { k: t('confirm.gas'), v: t('confirm.noGas') }],
+        ok: t('confirm.okSign')
+      });
+    }).then(function () {
       status('errand.sign', { price: x.price });
       var validBefore = Math.floor(Date.now() / 1000) + Math.min(Number(req.maxTimeoutSeconds) || 60, 300);
       var nonce = randHex32(); x.nonce = nonce;
@@ -398,6 +435,7 @@
       renderResult();
     }).catch(function (e) {
       if (e && e.code === 4001) status('errand.rejected', null, 'bad');
+      else if (e && e.aq === 'confirm.cancelled') status('confirm.cancelled');
       else status((e && e.aq) || 'errand.failed', (e && e.vars) || { msg: errMsg(e) }, 'bad');
       /* ★ 2026-10-21 お店の側で止まったとき（利用者の要望）：クエストの窓では「完了にする」ボタンを出す。
          自分の操作（取り消し・USDC 不足・署名が遅い）で止まったときは出さない（やり直せるので） */
@@ -405,7 +443,7 @@
       if (why && SHOP_SIDE.indexOf(why) >= 0 && sk === 'news' && AQ.quest && AQ.quest.offerSkip) AQ.quest.offerSkip('news', why, { shop: hostOf(url) });
     }).then(function () { setBusy(false); });
   }
-  var SHOP_SIDE = ['errand.shopSlow', 'errand.shopDown', 'errand.not402', 'errand.refused', 'errand.notPaid', 'errand.paidNoGoods', 'errand.unknownPaid', 'errand.failed'];
+  var SHOP_SIDE = ['errand.offList', 'errand.shopSlow', 'errand.shopDown', 'errand.not402', 'errand.refused', 'errand.notPaid', 'errand.paidNoGoods', 'errand.unknownPaid', 'errand.failed'];
   function hostOf(u) { try { return new URL(u).host; } catch (e) { return String(u); } }
 
   /* ★ 2026-10-19 クエストの窓では、お店をそのクエストの1軒に固定する（利用者の報告：
@@ -614,6 +652,14 @@
     }).then(function (ret) {
       var owner = '0x' + String(ret || '').slice(-40);
       if (owner.toLowerCase() !== String(acc).toLowerCase()) { var e = new Error('not owner'); e.aq = 'card.notOwnerChain'; e.vars = { owner: short(owner) }; throw e; }
+      status('confirm.look');
+      return AQ.confirm.ask({
+        after: $('robotStatus'),
+        what: t('confirm.what.card', { id: d.agentId }),
+        rows: [AQ.confirm.party('IdentityRegistry', reg), { k: t('confirm.money'), v: t('confirm.gasOnly') }],
+        ok: t('confirm.okTx')
+      });
+    }).then(function () {
       status('card.confirm');
       return W().rpc('eth_sendTransaction', [{ from: acc, to: reg, value: '0x0', data: setUriData(d.agentId, uri) }]);
     }).then(function (h) {
@@ -643,6 +689,7 @@
       }
     }).catch(function (e) {
       if (e && e.code === 4001) status('errand.rejected', null, 'bad');
+      else if (e && e.aq === 'confirm.cancelled') status('confirm.cancelled');
       else status((e && e.aq) || 'errand.failed', (e && e.vars) || { msg: errMsg(e), tx: hash ? short(hash) : '' }, 'bad');
     }).then(function () { setBusy(false); });
   }
