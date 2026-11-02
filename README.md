@@ -1,299 +1,95 @@
-# Agent Dispatch — Phase 0（リプレイ版）
+# Agent Quest
 
-AI エージェントの実行ログを、現代の街を走る配送ロボットの動きとして再生します。
-**上段に実況、下段に実際のHTTPとオンチェーンの1行**を必ずセットで出す、というのが唯一の絶対ルールです。
+**A free, beginner-friendly pixel-art learning app for onchain AI agents on Base.**
+Live: https://agent-quest-lilac.vercel.app · Safety page: https://agent-quest-lilac.vercel.app/safety.html
 
----
+You connect your own wallet, create an [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) agent identity on Base,
+and complete 13 short quests that show how onchain AI agents work: posting and judging jobs on a public board,
+paying for an API with [x402](https://www.x402.org/), keeping a memo, rating other agents, and more.
+Everything the app shows is read from real records (Base, Blockscout, technocore.chat, kibble.world);
+it says something "worked" only after it has checked the record.
 
-## 動かす
+It is a single static page (vanilla JS, no framework, no backend).
 
-`index.html` をブラウザで開くだけ。**サーバも npm も不要**です。
+## What it asks your wallet for
 
-- サンプルが4本入っています（画面下の「サンプル」で切替）
-  - **基本** … 有料APIを1回呼ぶ（402 → 支払い → 確定 → 受け取り）
-  - **失敗** … 502 と再試行、無通信の圧縮
-  - **大量** … 支払い114件が9コマに集約される（ナノペイメント想定）
-  - **チーム** … 3体が同時に別の建物で動く
-- **追うのは「依頼1件」（2026-09-08 に変更）。** それまではエージェント
-  1体を追っていたが、1体は複数の依頼を同時に抱えているので、①出された→
-  ②引き受けた→③納品→④判定 が行ったり来たりして人間には追えなかった。
-  依頼1件を追えば①〜④は必ず一方通行で、登場人物も「出した人・引き受けた
-  人・判定した人」の2〜3体に減る。右の欄は**依頼一覧**（依頼IDを持たない
-  ログ＝x402 のサンプルなどでは、今までどおりエージェント一覧が出る）。
-  一覧の①〜④の丸は「その段階の記録が取得できたログの中にあるか」だけを
-  表す＝灰色は予測ではなく「この範囲には無い」。
-- **読み込み直後は何も動かない。** 「接続するといきなりロボットが
-  動いていて、どれが動いたのか分からない」という報告への対応で、
-  依頼を選ぶまで盤面には家具（掲示板・納品口・検品台）だけが見え、
-  時計はコマ0で止まったまま。一覧が光っているので、そこから選ぶ。
-  選んだ瞬間にその依頼だけが①から再生され、記録が尽きたらそこで止まる
-  （他の依頼へ勝手に切り替わることはない）。
-- 操作：クリックで一時停止／`←` `→` でコマ送り／スペースで再生停止
-- **詳細** ボタンで、いま表示しているコマの中身（集約される前の生の
-  イベント全部）を開ける。閉じても画面のスクロール高さは変わらない
-  （固定オーバーレイ）。
-- 依頼一覧の行（または盤面の札そのもの）をクリックすると、その依頼1件に
-  絞って①から再生できる（**すべて表示** で解除。「詳しい設定」の欄に
-  依頼IDや題名の一部を入れて探すこともできる）。何コマぶんだけ再生して
-  いるかは常に正確な数で出す。いま追っている依頼の札をもう一度クリック
-  すると、その依頼の全イベントが詳細パネルに開く。
-- LIVE 接続中に届いた分へ再生が追いつかなくなったら、**最新に追いつく**
-  で一気に飛べる（届く量が読める速さを超えるとき、しきい値を超えたら
-  自動でも追いつく）。飛ばした数は毎回正直に出す（自分でコマ送り／
-  一時停止したときは自動追いつきを止める）。
+Only when you press a button — never just because the page was opened (on load it only uses the silent
+`eth_accounts` / `eth_chainId` reads). Before every signature or transaction, the app first shows what will be
+asked (what it is, who it goes to with a Basescan link, the limit and validity), and calls the wallet only after you
+press the confirm button.
 
-### 自分のデータを入れる4つの入口
+| Request | When | Details |
+|---|---|---|
+| `eth_requestAccounts` | "Connect wallet" | to learn your address |
+| `eth_sendTransaction` | register / update card / rate | only to the official ERC-8004 registries on Base: `register()`, `setAgentURI()` on IdentityRegistry, `giveFeedback()` on ReputationRegistry. No value is sent; gas only. Each carries the app's Base Builder Code suffix (ERC-8021) |
+| `eth_signTypedData_v4` | "buy news" / "buy a price" | one x402 v2 "exact" payment (EIP-3009 `TransferWithAuthorization`, USDC on Base). The receiving address, currency, chain and maximum amount are fixed per shop in `src/errand.js` (`ALLOW`); if the shop's 402 answer differs, the app stops without asking for a signature. Valid for at most 5 minutes |
 
-| 入口 | 準備 |
+Contracts (Base, chain 8453):
+
+- IdentityRegistry `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`
+- ReputationRegistry `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63`
+- USDC `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+
+## What it never asks for
+
+- No token approvals (`approve`, `permit`, `setApprovalForAll`)
+- No contracts of its own (it never deploys or calls custom contracts)
+- Never asks for a recovery phrase or private key
+- Never sends funds to the developer
+
+## Build and test
+
+```bash
+node build.js          # or: npm run build
+```
+
+`build.js` uses only Node's standard library. It writes:
+
+- `deploy/` — what Vercel serves: `index.html` (one file), `safety.html`, `.well-known/security.txt`, icons, `manifest.webmanifest`
+- `dist/agent-quest.html` (one file that opens on its own) and `dist/artifact.html`
+
+For development, open `index.html` directly (or run `start.bat` / `start-server.ps1` to serve it from `http://localhost`,
+which wallets need).
+
+Tests use Playwright (Chromium), viem and `@flop-labs/tclk` as dev dependencies:
+
+```bash
+npm ci
+npm test               # build, then the main checks one by one (tools/run-tests.mjs)
+node tools/run-tests.mjs shot-safety   # run only matching tests
+```
+
+If Playwright cannot find its browser, set `CHROMIUM_PATH` to a Chromium binary. Screenshots go to `SHOT_DIR`
+(default: the OS temp folder) or `tools/*.png` (ignored by git).
+
+## Vercel
+
+`vercel.json` runs `node build.js` with no install step and serves `deploy/`. It also sets security headers
+(`X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`, a `frame-ancestors 'none'` CSP,
+and a report-only CSP that lists every host the app talks to).
+
+Environment variables (all optional):
+
+| Name | What |
 |---|---|
-| **アドレスを貼る** | なし。ウォレットアドレスを入れて「読み込む」 |
-| **ドラッグ＆ドロップ / Ctrl+V** | ログのファイルかテキスト。形式は自動判別（`src/adapters/detect.js`） |
-| **LIVE** | technocore.chat の部屋名。新着が流れ込みます |
-| **「ログを開く」** | 手元の `.jsonl` を選ぶ |
+| `AQ_RPC_URL` | your own Base RPC endpoint (for example Alchemy). Falls back to `https://mainnet.base.org`. Keep it out of git (`rpc-url.txt` is ignored) |
+| `AQ_SITE_URL` | the public URL, for `og:image`, `canonical` and `security.txt` (`site-url.txt` also works) |
+| `AQ_BASE_APP_ID` | your Base Dashboard App ID, written as `<meta name="base:app_id">` (`base-app-id.txt` also works) |
 
-自分のエージェントのログの作り方は `docs/recorder.md`（10行のコピペ用スクリプト）。
+## Security contact
 
-配布用の1ファイル版が必要なときだけ `node build.js`（`dist/` に出ます）。
-
----
-
-## どこを直せば何が変わるか
-
-**これがこのプロジェクトの取扱説明書です。** 迷ったらこの表だけ見てください。
-
-| 直したいこと | 触るファイル |
-|---|---|
-| **街の地面（歩道・車道・横断歩道）** | `data/world.js` → `ground` |
-| **建物や設備の位置** | `data/world.js` → `objects` |
-| **どのURLがどの建物か** | `data/world.js` → `routing` |
-| **路面1マスの絵** | `src/render/tiles.js` |
-| **建物・看板・自販機などの絵** | `src/render/props.js` |
-| **歩道を選ぶか、敷地を突っ切るか** | `src/engine/path.js` → `cost` |
-| **部屋（kibbleのような1部屋だけのログ）の地面・掲示板／納品口／検品台の位置・机の数** | `data/room.js` |
-| **部屋の掲示板・納品口・検品台・ロボット・依頼札の絵** | `src/render/room.js` |
-| 街と部屋、どちらの画面にするか | `src/render/stage.js` → `pick()` |
-| 依頼札（カード）の色・板/納品口/検品台に並べる上限枚数・同時に描くロボットの上限体数・部屋の家具（掲示板／納品口／検品台）の配色 | `src/config.js` → `cardColors` / `maxBoardCards` / `maxDropoffCards` / `maxInspectCards` / `maxRobots` / `roomColors` |
-| 依頼札に大きく出す短縮ラベル（ja は漢字1文字・en は BUILD 等） | `src/i18n.js` → `card.<kind>` |
-| 1コマの長さ・再生速度 | `src/config.js` → `beatMs` / `speeds` |
-| 何件からまとめるか | `src/config.js` → `aggregateMin` / `aggregateWindowMs` |
-| どのイベントを必ず描くか | `src/config.js` → `tier`（1=必ず描く / 2=多ければまとめる / 3=描かない） |
-| まとめたコマ（batch）の中身の分け方・文言 | `src/engine/aggregate.js` → `familyOf()`（payment / plan / activity の3つに分ける。payment 以外の束に「支払い」の語を使わせないための境界がここ）／文言は `src/i18n.js` の `act.batch` 系 `act.actbatch` 系 |
-| 何秒の無通信で待機コマを挟むか | `src/config.js` → `idleGapMs` |
-| LIVE が届いた分にどれだけ遅れたら自動で追いつくか | `src/config.js` → `liveMaxBehind` |
-| 対応チェーンを増やす | `data/chains.js` |
-| 色 | `src/config.js` → `palette`（ロボット）、`tiles.js` / `props.js` の `COL` `C`、UIは `css/style.css` の `:root` |
-| 文言（日本語・英語） | `src/i18n.js` **だけ**。コード側に文字列を書かないこと |
-| ロボットのドット絵（元の3方向） | `src/sprites.js` → `AQ.sprites.down` / `up` / `side`（1文字=1ピクセル。**32×40（行はすべて32文字・40行）**。2026-09-04に16×20から倍精細化。`AQ.checkSprites()` で確認できます） |
-| ロボットの見た目のバリエーション（アンテナ・頭部形状・車体プロポーション・走行部・背負い荷物・アクセサリ） | `src/sprites.js` → `AQ.sprites.build(actor)`（actor文字列から決定的に選ぶ。頭部・車体・走行部・背負い荷物は行の範囲をまるごと差し替え、アンテナ・アクセサリは上に重ねて描く。新しい特徴を足すときは `TRAITS` に1つ増やして、対応する `build*Patch` 関数を1つ足す） |
-| どのコマでどこに立つか | `src/render/scene.js` → `PLACE_OF`（部屋は `src/render/room.js` → `placeOf()`） |
-| コマごとの演出（金額の吹き出し・レシート等） | `src/render/scene.js` → `OVERLAY`（部屋は `src/render/room.js` → `OVERLAY`） |
-| 実況と生ログの文面 | `src/render/hud.js` の `story()` / `raw()` |
-| 詳細パネルに出す項目・並び | `src/render/hud.js` の `detailEvent()` |
-| 1体に絞るときの DID の一致判定（完全一致／末尾一致） | `src/main.js` → `focusByDid()` |
-| USDC・CREDITS・RETRIES の増減 | `src/engine/state.js` |
-| 新しいチェーンに対応する | `src/adapters/` にファイルを1つ足す（後述） |
-| kibble（technocore.chat のパイプ区切り書式）の読み方 | `src/adapters/fromKibble.js` |
-| デモのログ | `data/runs/*.js` |
+Please open an issue: https://github.com/Komainu/agent-quest/issues (also in `/.well-known/security.txt`).
 
 ---
 
-## 構成
+## 日本語
 
-```
-index.html          読み込み順だけが書いてある
-css/style.css       見た目（色は :root）
-data/
-  world.js          街（路面の文字マップ＋建物などの配置）
-  room.js           部屋（kibbleのような1部屋だけのログ用。地面＋掲示板／検品台／机）
-  runs/             デモのログ
-src/
-  config.js         調整値ぜんぶ
-  i18n.js           文言ぜんぶ
-  sprites.js        配送ロボットのドット絵（下・上・横）＋actorごとの見た目バリエーション（AQ.sprites.build）
-  engine/
-    questlog.js     入口。イベントの正規化と検証
-    aggregate.js    イベント列 → コマ列（間引きと集約はここだけ。payment / plan / activity の3種の束に分ける）
-    state.js        USDC / CREDITS / RETRIES の計算
-    clock.js        再生時計（play / pause / step / seek）
-    path.js         道さがし（ダイクストラ。歩道を優先して歩く）
-  render/
-    tiles.js        路面1マスの絵
-    props.js        建物・看板・充電スタンド・街路樹など
-    scene.js        カメラ・ロボット・重なり順・コマごとの演出（＝街）
-    room.js         掲示板・検品台・ロボット・依頼札の絵（＝部屋）
-    stage.js        街と部屋のどちらを描くか選ぶだけ（絵は描かない）
-    hud.js          実況・生ログ・数値・名簿・詳細パネル
-  adapters/         チェーンごとの読み取り部
-    fromTechnocore.js  technocore.chat の部屋（生の書き込み。時刻はサーバ由来）
-    fromKibble.js      kibble 部屋で使われている自称 kibble-v1 書式（JOB/CLAIM/DELIVER/ATTEST）
-  main.js           配線だけ（ロジックを書かない）。1体に絞る／LIVEの追いつきの状態もここが持つ
-build.js            1ファイルにまとめる（配布時のみ）
-```
+**Agent Quest** は、初心者向けの無料のドット絵の学習アプリです。自分のウォレットをつなぎ、Base に ERC-8004 の
+エージェントを作って、13 のクエストでオンチェーンの AI エージェントのしくみを学びます。サーバーを持たない1ページだけのアプリです。
 
-## 街の直しかた
-
-舞台は現代の市街地です。空想の地形・通貨・戦闘は使っていません。
-主役は自律配送ロボット、通貨は USDC、支払い先は実際の形式の URL です。
-
-`data/world.js` は2つに分かれています。
-
-**1. 路面（`ground`）** — 1文字 = 1マス（20px）
-
-```
-s  歩道    x  横断歩道    p  敷地・タイル舗装
-a  車道    l  車道（センターライン）    g  植え込み
-```
-
-行の長さをそろえてください（現在は24文字 × 16行）。
-歩けるのは `walkable` に含まれる文字のマスだけです（いまは歩道・横断歩道・敷地）。
-
-**2. 建物と設備（`objects`）**
-
-```js
-{ id:'svc-news', type:'service', x:17, y:1, w:5, h:3,
-  label:'api.example.dev', at:[19,4] }
-```
-
-- `x, y, w, h` … 左上のマスと大きさ。足元は自動で通行止めになります
-- `at` … ロボットが用事のときに立つマス（歩けるマスにすること）
-- `label` … 看板に出る文字（ASCIIのみ）
-- `type` … `office` `service` `signage` `charger` `tree` `vending` `signal` `car`
-
-**3. URLと建物の対応（`routing`）**
-
-エンドポイントのURLから建物を選びます。**別のサービスは別の建物**に着きます。
-サービスを増やすときは `objects` に `service` を足して、`routing` に1行足すだけです。
-
-経路は建物を動かすたびに自動で計算し直されるので、道の作り直しは不要です。
-
-依存は**一方通行**です（config/i18n/sprites ← engine ← render ← main）。
-上流のファイルは下流を知りません。だからどこか1つを差し替えても他が壊れません。
-
----
-
-## 街と部屋（どちらの画面になるか）
-
-画面は2つあります。`src/render/stage.js` が、読み込んだログを見て
-どちらを描くか毎回選びなおします（`main.js` から呼ばれるだけで、
-自分では絵を1つも描きません）。
-
-- **支払い（`payment.*`）が1件でもある** → 街（`scene.js` + `data/world.js`）。
-  x402 は「別のサービスに払いに行く」仕組みなので、本当に移動が起きる。
-- **それ以外**（＝1つの掲示板の中だけで完結している。kibble など） → 部屋（`room.js` + `data/room.js`）。
-  複数の建物のあいだを移動する、という事実が無いログを街で描くと、
-  起きていない移動を描くことになる＝「分からないことは描かない」に反する。
-
-手で固定したいときは `AQ.stage.use('city')` / `use('room')`。
-
-## 部屋の直しかた
-
-`data/room.js` は `data/world.js` と同じ約束ごとで書きます（`ground` の文字
-マップ＋ `objects` の配置）。街と違うのは、部屋は1つしかないので行き先が
-「掲示板（board）」「納品口（dropoff）」「検品台（inspect）」
-「自分の机（desks）」の4か所だけ、という点です。
-
-- **1マス＝40px**（`tile: 40`）、部屋全体は**20列×8行**。ちょうど画面に映る
-  マス数（`view`）と同じ大きさにしてあるので、カメラは常に (0,0) で
-  止まったまま＝部屋のどこかにパンして見えなくなる、ということが起きません。
-- **掲示板・納品口・検品台は、それぞれ「枠→タイトル帯→中の札」がひとかたまりの
-  1つのオブジェクト**として置いてあります（`objects` の `board` / `dropoff` /
-  `inspect`）。以前の版は「暗い帯」と「JOB BOARDという文字」が離れて描かれていて、
-  どれが掲示板か分からない、という報告があったための作りです。
-  2026-09-06: さらに「床とほぼ同じ暗さで家具に見えない」という報告を
-  受け、板＝暖色のコルクボード調・台＝寒色の金属カウンター調と、
-  はっきり色調を分けた（`src/config.js` → `roomColors`）。
-  2026-09-06 (2): 「納品する場所が無い。判定する場所も無い」という
-  報告への対応で、南の壁1枚だった「検品台（bench）」を、納品口
-  （dropoff＝ DELIVER された未判定の札が置かれる場所。琥珀色）と
-  検品台（inspect＝ ATTEST で✓／✗が押される場所。従来どおりの
-  鋼板カウンター）の2つに分けた。板の札は画鋲、検品台の札はクリップ、
-  納品口の札はハッチ（投入口）で「乗っている」ことが分かるようにしてある。
-- **`places.desks` は必ず8マス。** `src/config.js` → `maxRobots`（同時に描く
-  ロボットの上限）と同じ数だけ用意してあります。机どうしは3マス間隔
-  （＝2マスぶんの空き）を空けてあり、ロボット本体と頭上の名札が
-  隣の机とぶつからないようにしてあります。
-- 依頼札（カード）は ID ではなく **kind を大きく** 表示します（ja は
-  漢字1文字＝作／調／説／評、en は `BUILD` / `RSRCH` / `XPLN` / `REV` など。
-  短縮語は `src/i18n.js` → `card.<kind>`）。ID は詳細パネルに残るので、
-  情報として消えるわけではありません（2026-09-06: 実況欄・生ログの
-  main view からは job id・kind を締め出し、詳細パネルだけに一本化した）。
-- 板・納品口・検品台に並べる札の枚数（`maxBoardCards` / `maxDropoffCards` /
-  `maxInspectCards`）と、同時に描くロボットの体数（`maxRobots`）には
-  上限があります。超えた分は必ず `+N` （札）／「他 N 体」（ロボット）と
-  **件数を正直に**出します（`tools/check-world.js` と別に、この
-  「表示数＋overflow＝本当の件数」という数え間違いの無さは自動テストで
-  検査しています）。
-
-`tools/check-world.js` は街・部屋の両方を同じロジックで検証します
-（歩けるはずのマスがふさがれていないか、`places.desks` の8マスが
-すべて重複なく用意されているか、板の下端〜納品口・検品台の上端の
-床の帯（floor band）がロボットの footprint より低くなっていないか、
-など）。部屋の建物・机を動かしたら必ず1回実行してください。
-
----
-
-## 設計上の約束（変えるときは意識して）
-
-1. **実況と事実は必ずセット。** `hud.js` は毎コマ `story()` と `raw()` の両方を書きます。片方だけにしない。
-2. **間引くのは描画だけ。** イベントは全件保持し、画面隅に `表示 9 / 全 114 件` と出します。数を偽らない。集約されたコマ（batch/actbatch/planbatch）の中身は「詳細」パネルで全部見られます。
-3. **レンダラはリプレイ専用。** ライブ表示は「数秒遅れのバッファからコマを足していく」だけで実現します。だから `clock.js` は実時刻を持っていません。LIVE が届いた分に追いつけなくなったときの「最新に追いつく」も、内部的には「先のコマへ seek するだけ」であり、レンダラ自身が実時刻を扱うようにはなっていません。1体に絞る機能（`main.js` の focus）も同様に「再生するコマ列を絞るだけ」で、`scene.js` / `room.js` の `render()` にはいつもログ全体と本当のコマ番号を渡します＝レンダラは今までどおり「コマ番号→絵」の純粋関数のままです。
-4. **分からないことは描かない。** 送金履歴しか無いなら「払った」「確定した」しか描かない（`adapters/fromTransfers.js` 参照）。宣言されていない残高は表示せず `—` を出す。支払い（`payment.*`）を1件も含まないコマの束（kibble の CLAIM/DELIVER のような書き込みの集約など）に「支払い」「合計」の語を使わない（`aggregate.js` の family 分け、`hud.js` の `actbatch` 参照）のもこの一部。LIVE の自動追いつきで飛ばしたコマ数も、ロボットの見た目（形・色）がこのアプリの割り当てであることも、同じ理由で必ず正直に数・注記を出します。
-
----
-
-## 新しいチェーンを足す
-
-`src/adapters/` のファイルを1つコピーして、中の変換だけ書き換えます。
-**画面もドット絵もテンポも一切触りません。** 詳しくは `src/adapters/README.md`。
-
-```js
-// 例：Flop を足す場合
-AQ.adapters.fromFlop = function (jobs) {
-  return jobs.map(j => ({
-    v: 1, run: j.runId, t: j.ts, actor: j.agent,
-    type: 'payment.sent',
-    target: j.model,
-    amount: { asset: 'FLOP', value: j.cost, chain: 'flop' }
-  }));
-};
-```
-
----
-
-## Dispatch Log 形式
-
-イベント1件 = 1行の JSON。詳細は `docs/dispatch-log.md`。
-
-```json
-{"v":1,"run":"0x7c3f…a1","t":1758000123456,"actor":"scout",
- "type":"payment.sent","target":"https://api.example.dev/news",
- "amount":{"asset":"USDC","value":"0.010","chain":"arc"},
- "tx":"0x9be2…04","say":"今日の見出しを取りに行く"}
-```
-
-種別は9つ：
-`run.start` / `agent.plan` / `tool.call` / `payment.required` / `payment.sent` /
-`payment.settled` / `result.ok` / `result.error` / `run.end`
-
----
-
-## まだ無いもの / 未検証
-
-- **チェーンAPIへの実接続は未検証。** `src/adapters/fromChain.js` の解析部はフィクスチャで検証済みですが、
-  ブラウザから Blockscout に実際に届くか（CORS）は、あなたの環境で押してみるまで分かりません
-- Arc 対応（`data/chains.js` にエンドポイントを1行足すだけ。公開されたら）
-- 事件（失敗・高額支払い）が起きたときの自動カットイン
-- 初回に「これは何を見せる画面か」を伝える案内
-- LIVE 接続中に「1体に絞る」を使うと、絞り込み前の再生位置への完全な
-  巻き戻しは保証していません（届いた分をどんどん組み直すLIVEの性質上、
-  厳密な位置合わせより「本当のコマ番号に一番近い所へ寄せる」実装に
-  留めています）
-
----
-
-## ライセンス / 素材
-
-ドット絵はすべて自作（`src/sprites.js` と `tiles.js` / `props.js` の矩形描画）。
-外部素材は使っていないので、権利関係はクリーンです。
-フォントは Google Fonts（DotGothic16 / IBM Plex Mono / Press Start 2P）を読み込みます。
-オフラインで開くと等幅フォントにフォールバックしますが、動作には影響しません。
+- ウォレットに頼むのは、ボタンを押したときだけです（接続・ERC-8004 公式の登録先への取引・x402 の支払いの署名）。
+  署名や取引の前に、アプリの中で中身（何を頼むか・相手・上限と期限）を見せ、確認のボタンを押してからウォレットを呼びます
+- トークンの使用許可（approve・permit・setApprovalForAll）、自前のコントラクト、シードフレーズや秘密鍵の入力、開発者への送金は、どれもありません
+- 組み立て：`node build.js`。テスト：`npm ci` のあと `npm test`
+- Vercel の環境変数：`AQ_RPC_URL`（自分用の Base の窓口）・`AQ_SITE_URL`（公開先の URL）・`AQ_BASE_APP_ID`（Base Dashboard の App ID）
+- 詳しくは [安全について](https://agent-quest-lilac.vercel.app/safety.html) を見てください
