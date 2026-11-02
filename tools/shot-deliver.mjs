@@ -20,14 +20,14 @@
      ほかに: 投入口は納品のコマ以外でも（閉じた状態で）いつも描かれている
              足もとの楕円・上向きの粒（suction）はもう出ない
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FILE = 'file://' + path.join(ROOT, 'dist', 'agent-quest.html');
 const SHOTS = process.argv.includes('--shots');
-const SCR = '/tmp/claude-0/-home-claude/771479e9-d120-5f80-8905-16d478e5aced/scratchpad';
+const SCR = process.env.SHOT_DIR || (await import('node:os')).tmpdir();
 const iso = (ms) => new Date(1758300000000 + ms).toISOString();
 
 const MSGS = [];
@@ -45,7 +45,7 @@ let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 const ok   = (m) => console.log('    · ' + m);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1860, height: 880 } });
 page.on('pageerror', e => { console.log('    ✗ JS error: ' + e.message); bad++; });
 await page.goto(FILE);

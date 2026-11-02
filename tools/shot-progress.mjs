@@ -20,7 +20,7 @@
      詳細パネルは「その依頼の全記録」を出すだけで、直前に見ていた
      依頼が何だったかという考え方を持たないため、移し替え先も無い。
      よって「依頼の切り替わり」のスクリーンショットと検査は削除した。 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -45,9 +45,7 @@ const MSGS = [
 const sizes = [[1920, 1080, 'ja'], [1440, 900, 'ja'], [1440, 900, 'en']];
 let bad = 0;
 const fail = (m) => { console.log('  ✗ ' + m); bad++; };
-/* この環境の Chromium は /opt/pw-browsers/chromium に置かれている
-   （playwright 側のバージョン番号と一致しないので明示する）。 */
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 for (const [w, h, lang] of sizes) {
   const page = await browser.newPage({ viewport: { width: w, height: h } });

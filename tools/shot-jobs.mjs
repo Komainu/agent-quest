@@ -36,7 +36,7 @@
        前に、すでにコード上どこにも無くなっていた（grep で確認済み）。
        帯の除去とは無関係に、とっくに死んでいた検査なので、ついでに
        削除した。 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -71,7 +71,7 @@ const MSGS = [
 
 const sizes = [[1920, 1080, 'ja'], [1440, 900, 'ja'], [1440, 900, 'en']];
 let bad = 0;
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 for (const [w, h, lang] of sizes) {
   const page = await browser.newPage({ viewport: { width: w, height: h } });

@@ -10,7 +10,7 @@
      ・絵の中に描いた文字（ラベル）に undefined / NaN が無いか
      ・縦横のはみ出し（ページがスクロールしてしまう）
      ・コマンド（しらべる・さいふ・きろく）を押したときの窓の中身が空でないか */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -44,7 +44,7 @@ const SCENES = [
   { name: 'kibble-agent', kibble: 'agent' }
 ];
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const problems = [];
 const add = (where, what) => { problems.push(where + ' — ' + what); };
 

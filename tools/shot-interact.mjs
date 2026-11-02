@@ -10,7 +10,7 @@
      ・検索欄で空白を打っても再生が切り替わらない
      ・詳細（ⓘ）を開いて閉じる
      ・街（入門）と部屋（kibble）の両方で */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,7 +30,7 @@ const MSGS = [
 
 let bad = 0;
 const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) bad++; };
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const errs = [];
 page.on('pageerror', e => errs.push(e.message));

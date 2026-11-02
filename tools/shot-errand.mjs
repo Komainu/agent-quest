@@ -11,13 +11,14 @@
          - 期限（validBefore）が 60 秒以内、金額 10000（0.01 USDC）、受取先
      ・身分証の書き換えは、送られた data が setAgentURI(番号, data:…base64) になっているか
        と、中身が EIP-8004 の登録ファイルの形か */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
+import { withAutoConfirm } from './auto-confirm.mjs';
 import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-const require = createRequire('/tmp/claude-0/-home-claude/771479e9-d120-5f80-8905-16d478e5aced/scratchpad/k/');
+const require = createRequire(import.meta.url);
 const { privateKeyToAccount } = require('viem/accounts');
 const { verifyTypedData } = require('viem');
 
@@ -34,7 +35,8 @@ const TX_PAY = '0x' + 'cd'.repeat(32), TX_CARD = '0x' + 'ef'.repeat(32);
 
 let bad = 0;
 const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) bad++; };
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+withAutoConfirm(browser);   // ウォレットに頼む前の確認は自動で押す（tools/auto-confirm.mjs）
 
 async function setup(opts = {}) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

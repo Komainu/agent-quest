@@ -10,7 +10,7 @@
      ・時系列の再生ではないので、まとめであることを画面に書く
    確かめるのは、そのとおりに動いていること・数が正確なこと・
    全記録が「詳細」にあること。 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -32,7 +32,7 @@ const MSGS = [
 ];
 
 let bad = 0;
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 for (const lang of ['ja', 'en']) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

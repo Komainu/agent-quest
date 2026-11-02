@@ -6,3 +6,5 @@ dist/
 # 報告の下書き (手元だけ)
 reports/
 node_modules/
+# 検査が書き出すスクリーンショット
+tools/*.png

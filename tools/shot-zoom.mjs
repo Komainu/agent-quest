@@ -18,7 +18,7 @@
      数字で下限を打っておく。はみ出しゼロも同時に見る（大きくする方向の
      変更は、油断すると画面からあふれる）。
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -51,7 +51,7 @@ const MIN_SPRITE = { '1860x880': 160, '1440x900': 145, '1280x800': 124 };
 let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 for (const vp of [{ width: 1860, height: 880 }, { width: 1440, height: 900 }, { width: 1280, height: 800 }]) {
   const key = vp.width + 'x' + vp.height;

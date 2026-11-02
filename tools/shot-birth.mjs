@@ -10,7 +10,8 @@
      ・身分証の中身（agentURI）に名前が入っている
      ・番号は届いた記録（Transfer）から読む → 「#番号が生まれました」→ 街で見られる
      ・ウォレットが無い／登録先が無い／取り消された、のときは何も送らずに知らせる */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
+import { withAutoConfirm } from './auto-confirm.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import http from 'node:http';
@@ -30,7 +31,8 @@ const OX_SUFFIX = '62635f6c34396c367674790b0080218021802180218021802180218021';
 
 let bad = 0;
 const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) bad++; };
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+withAutoConfirm(browser);   // ウォレットに頼む前の確認は自動で押す（tools/auto-confirm.mjs）
 
 async function run(opts) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

@@ -20,7 +20,7 @@
         （イベント数ではなく発言の回数。tool.call と result.ok の対で
           倍に見えるのを、seq の種類数で数え直している）
      5) 回数が多いコマほど往復が増える */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,7 +38,7 @@ for (let i = 0, t = 0; i < 60; i++) {
 let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 page.on('pageerror', e => { console.log('    ✗ JS error: ' + e.message); bad++; });
 await page.goto(FILE);

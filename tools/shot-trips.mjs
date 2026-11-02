@@ -42,7 +42,7 @@
        （移し替え先が無い、道連れの削除）。詳細パネルは常に件数と
        依頼IDを出すだけの一覧で、「なぜ0件のものがあるのか」という
        説明文を持たない設計なので、ここへ移すのも筋が違う。 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -75,7 +75,7 @@ const expectTrips = (c) => (c <= 9 ? 1 : Math.max(1, Math.min(5, String(c).lengt
 let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 /* 3件（1往復のまま）と 40件（2往復）と 150件（3往復）で比べる。
    ＝件数が増えたときだけ絵が変わることを見る。 */

@@ -6,13 +6,13 @@
      ・街 7 マス/秒以下（直す前の約半分）・部屋 1.6 マス/秒以下
      ・どちらも、ちゃんと歩いている（0.5 マス/秒より速い＝検査の空回りでない）
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import { bigLog } from './perf-big.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FILE = process.env.AQ_FILE || path.join(ROOT, 'dist', 'agent-quest.html');
-const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+const b=await chromium.launch({...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 async function measure(file){
   const p=await b.newPage({viewport:{width:1700,height:950}});
   await p.goto('file://'+file); await p.waitForFunction(()=>window.AQ&&AQ.app);

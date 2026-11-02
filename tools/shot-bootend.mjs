@@ -17,7 +17,7 @@
      全員表示（誰も選んでいない）では始動も終了も入れない。
      説明: 一覧の種類の印の説明が「依頼の種類：…」。絵の中の札にマウスを乗せても同じ。
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -40,7 +40,7 @@ let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 const ok   = (m) => console.log('    · ' + m);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1860, height: 880 } });
 page.on('pageerror', e => { console.log('    ✗ JS error: ' + e.message); bad++; });
 await page.goto(FILE);

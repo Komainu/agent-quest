@@ -23,7 +23,7 @@
         選んだ相手・依頼・主語が勝手に変わらないことを確かめる
      E) 実時計での再生：既定速度のまま数秒回して、例外が出ないこと
      F) JS エラーが1件も出ていないこと・画面からはみ出していないこと */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -33,7 +33,7 @@ const FILE = 'file://' + path.join(ROOT, 'dist', 'agent-quest.html');
 let bad = 0;
 const fail = (m) => { console.log('  ✗ ' + m); bad++; };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 page.on('pageerror', e => fail('JS error: ' + e.message));
 /* 外部フォント（Google Fonts）はこの検査環境から取りに行けないので、
