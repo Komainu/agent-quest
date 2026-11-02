@@ -1,0 +1,7 @@
+{"v":1,"run":"r1","t":1758000000000,"actor":"scout","type":"run.start","meta":{"budget":5.0}}
+{"v":1,"run":"r1","t":1758000000900,"actor":"scout","type":"tool.call","target":"https://api.example.dev/news"}
+{"v":1,"run":"r1","t":1758000001200,"actor":"scout","type":"payment.required","target":"https://api.example.dev/news","amount":{"asset":"USDC","value":"0.010","chain":"arc"}}
+{"v":1,"run":"r1","t":1758000001600,"actor":"scout","type":"payment.sent","target":"https://api.example.dev/news","amount":{"asset":"USDC","value":"0.010","chain":"arc"}}
+{"v":1,"run":"r1","t":1758000002100,"actor":"scout","type":"payment.settled","tx":"0x9be200000000004a","amount":{"asset":"USDC","value":"0.010","chain":"arc"},"meta":{"batched":1}}
+{"v":1,"run":"r1","t":1758000002400,"actor":"scout","type":"result.ok","target":"https://api.example.dev/news","item":"news.json","meta":{"bytes":"12.4 KB"}}
+{"v":1,"run":"r1","t":1758000002600,"actor":"scout","type":"run.end"}
