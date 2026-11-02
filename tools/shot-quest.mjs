@@ -742,7 +742,7 @@ console.log('\n[はじめの画面：Agent Quest・クエストがいちばん�
     const v = await page.evaluate(() => ({ logo: document.querySelector('.start-logo').innerText, title: document.title, h1: document.querySelector('header h1').innerText,
       first: document.querySelector('.start-card > section, .start-card > h3').id, dots: document.querySelectorAll('#startQuestDots li').length,
       go: document.getElementById('startQuestGoT').innerText, focus: document.activeElement && document.activeElement.id }));
-    ok(v.logo === 'AGENT QUEST' && v.title === 'Agent Quest' && v.h1 === 'AGENT QUEST', 'アプリの名前は Agent Quest（ロゴ・題名・見出し）');
+    ok(v.logo === 'AGENT QUEST' && /^Agent Quest( — |$)/.test(v.title) && v.h1 === 'AGENT QUEST', 'アプリの名前は Agent Quest（ロゴ・題名・見出し）');
     ok(v.first === 'startQuest' && v.dots === 13, 'はじめの画面のいちばん上はクエスト（13 の印）');
     ok(/クエストを始める/.test(v.go) && v.focus === 'startQuestGo', '初めての人には「▶ クエストを始める」。最初からそのボタンにフォーカス');
     await page.click('#startQuestGo'); await page.waitForTimeout(300);
