@@ -624,6 +624,10 @@
     if (!$('startQuest')) return;
     var n = count(), total = QUESTS.length, d = mine(), nx = nextQuest();
     $('startTagline').textContent = t('start.tagline');
+    /* ★ 2026-11-02 安全についてのページへのリンク（はじめの画面とページの下） */
+    if ($('startSafety')) $('startSafety').textContent = t('start.safety');
+    if ($('footSafety')) $('footSafety').textContent = t('foot.safety');
+    if ($('footGithub')) $('footGithub').textContent = t('foot.github');
     $('startQuestTitle').textContent = t('start.questTitle');
     var ag = $('startQuestAgent');
     ag.hidden = !d; ag.textContent = d ? t('start.agent', { id: d.agentId, name: d.name }) : '';

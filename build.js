@@ -117,7 +117,9 @@ console.log('  Base の窓口: ' + (rpcUrl ? '自分用（rpc-url.txt）→ だ�
   const metaShare = siteUrl
     ? `<meta property="og:url" content="${esc(siteUrl)}/">\n<meta property="og:image" content="${esc(ogImg)}">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:image" content="${esc(ogImg)}">\n`
     : '';
-  const desc = '13 のクエストで、はじめての AI エージェントを Base で動かそう / Build and run your first onchain AI agent in 13 quests';
+  /* ★ 2026-11-02 説明は「無料の学習アプリ」「秘密鍵を求めない」がはっきり分かるように（審査する人・自動スキャン向け） */
+  const desc = '無料の学習アプリ。13 のクエストで、はじめての AI エージェントを Base で動かします。シードフレーズや秘密鍵は求めません / A free learning app: build and run your first onchain AI agent on Base in 13 quests. It never asks for your recovery phrase or private key.';
+  const metaCanon = siteUrl ? `<link rel="canonical" href="${esc(siteUrl)}/">\n` : '';
   fs.mkdirSync(path.join(ROOT, 'deploy'), { recursive: true });
   fs.writeFileSync(path.join(ROOT, 'deploy', 'index.html'),
 `<!doctype html>
@@ -125,7 +127,7 @@ console.log('  Base の窓口: ' + (rpcUrl ? '自分用（rpc-url.txt）→ だ�
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-${metaApp}${metaIcons}${metaShare}<meta name="description" content="${esc(desc)}">
+${metaApp}${metaIcons}${metaShare}${metaCanon}<meta name="description" content="${esc(desc)}">
 <meta property="og:title" content="Agent Quest">
 <meta property="og:description" content="${esc(desc)}">
 ${inner.split('\n').slice(0, HEAD_LINES).join('\n')}
@@ -134,6 +136,22 @@ ${inner.split('\n').slice(0, HEAD_LINES).join('\n')}
 ${inner.split('\n').slice(HEAD_LINES).join('\n')}
 </body>
 </html>`);
+  /* ★ 2026-11-02 安全についてのページ（src/pages/safety.html）と /.well-known/security.txt。
+     連絡先はこのリポジトリの GitHub Issues（メールアドレスは入れない） */
+  const REPO = 'https://github.com/Komainu/agent-quest';
+  const safety = fs.readFileSync(path.join(ROOT, 'src', 'pages', 'safety.html'), 'utf8')
+    .replace('<!--CANONICAL-->', siteUrl ? `<link rel="canonical" href="${esc(siteUrl)}/safety.html">` : '');
+  fs.writeFileSync(path.join(ROOT, 'deploy', 'safety.html'), safety);
+  fs.writeFileSync(path.join(ROOT, 'dist', 'safety.html'), safety);
+  const expires = new Date(Date.now() + 365 * 86400000);
+  expires.setUTCHours(0, 0, 0, 0);
+  fs.mkdirSync(path.join(ROOT, 'deploy', '.well-known'), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, 'deploy', '.well-known', 'security.txt'),
+    `Contact: ${REPO}/issues\n` +
+    `Expires: ${expires.toISOString().replace('.000Z', 'Z')}\n` +
+    `Preferred-Languages: ja, en\n` +
+    (siteUrl ? `Canonical: ${siteUrl}/.well-known/security.txt\n` : ''));
+  console.log('deploy/safety.html・deploy/.well-known/security.txt を書きました');
   console.log('deploy/index.html' + (appId ? '（base:app_id 入り）' : '（App ID 未設定：base-app-id.txt を置くと入ります）'));
   console.log('  アイコン・manifest.webmanifest を deploy/ に置きました' + (siteUrl ? '（共有用の画像 og:image 入り：' + siteUrl + '）' : '（共有用の画像は未設定：公開先の URL を site-url.txt に書くと入ります）'));
 }
