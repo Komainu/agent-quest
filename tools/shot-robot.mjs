@@ -10,7 +10,7 @@
      ・最初に DID の名刺（/kv/did-<2>/<14>）に ERC-8004 の番号を書く
      ・サーバーの返事が合わないときは「貼れた」と言わない
      ・「部屋で見る」で kibble につなぎ、その仕事が選ばれ、ロボットが持ち主の名前で出る */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -36,7 +36,7 @@ function verify(did, room, nonce, text, sig) {
   return crypto.verify(null, Buffer.from(room + '|' + nonce + '|' + text, 'utf8'), key, Buffer.from(sig, 'base64url'));
 }
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 async function setup(opts = {}) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -194,7 +194,7 @@ console.log('\n[仕事を頼む（kibble）]');
   await page.waitForSelector('#robotRepBody .robot-rep-score', { timeout: 5000 }).catch(() => {});
   const rep = await page.evaluate(() => ({ t: document.getElementById('robotRepBody').innerText, jobsHidden: document.getElementById('robotJobs').hidden }));
   ok(/^2/.test(rep.t) && /500 位/.test(rep.t) && /依頼した[\s\S]*2 × 2 = 0/.test(rep.t), '評判は kibble.world の数字をそのまま出す（' + rep.t.split('\n').slice(0, 3).join(' / ') + '）');
-  ok(/3 回になるまで/.test(rep.t) && /約束されたものではありません/.test(rep.t), '点が0のままの理由と、エアドロップの約束ではないことを書く');
+  ok(/3 回になるまで/.test(rep.t) && /約束ではありません/.test(rep.t) && !/エアドロップ/.test(rep.t), '点が0のままの理由と、何かがもらえる約束ではないことを書く（エアドロップの言葉は使わない）');
   ok(rep.jobsHidden, 'パネルは1つずつ開く');
   await page.evaluate(() => document.getElementById('robotRep').scrollIntoView());
   await page.screenshot({ path: path.join(ROOT, 'tools', 'shot-robot-rep.png') });
