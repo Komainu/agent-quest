@@ -15,7 +15,7 @@
      ・家具の上の札が、手を伸ばさずに誰かの手に移る
      ・コマの途中で、家具の上に札が急に現れる／急に消える
    どれも「ある場所から、腕・手を通らずに別の場所へ移った」＝ワープ。 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -61,7 +61,7 @@ function scenario(seed) {
   return { msgs, agents };
 }
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 let jsErr = 0;
 page.on('pageerror', e => { console.log('  ✗ JS error: ' + e.message); jsErr++; });

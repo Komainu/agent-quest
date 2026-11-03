@@ -13,7 +13,7 @@
         （本物のログだと思われたら、このアプリの約束が崩れる）
      ⑤ ほかのデモを読み込んだあとでも、ボタン1つで入門に戻れること
      ⑥ 画面からはみ出さないこと（帯が5段階に増えたので） */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -37,7 +37,7 @@ const WANT = [
 let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 for (const lang of ['ja', 'en']) {
   for (const vp of [{ width: 1440, height: 900 }, { width: 1280, height: 800 }]) {

@@ -1,5 +1,5 @@
 /* 計測用（検査ではない）: 大きなログでの1フレームの重さと、ロボットの動きの跳び */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -22,7 +22,7 @@ export function bigLog(nJobs = 1400, star = 215) {
 const isMain = process.argv[1] && process.argv[1].endsWith('perf-big.mjs');
 if (isMain) {
   const M = bigLog();
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+  const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1860, height: 880 } });
   await page.goto(FILE);
   await page.waitForFunction(() => window.AQ && window.AQ.app);

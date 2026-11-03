@@ -289,6 +289,15 @@
     }).then(function (code) {
       /* 登録先が本当にあるか。無いチェーン・無いアドレスには送らない（作り話をしない）。 */
       if (!code || /^0x0*$/.test(code)) { var e = new Error('no registry'); e.aq = 'birth.noRegistry'; throw e; }
+      /* ★ 2026-11-02 ウォレットに頼む前に、アプリの中で中身を見せる。押すまでウォレットは呼ばない */
+      status('confirm.look');
+      return AQ.confirm.ask({
+        after: $('birthStatus'),
+        what: t('confirm.what.birth', { name: name }),
+        rows: [AQ.confirm.party('IdentityRegistry', REGISTRY), { k: t('confirm.money'), v: t('confirm.gasOnly') }],
+        ok: t('confirm.okTx')
+      });
+    }).then(function () {
       status('birth.confirm');
       var codes = (AQ.config && AQ.config.builderCode) ? [AQ.config.builderCode] : [];
       return rpc('eth_sendTransaction', [{ from: owner, to: REGISTRY, value: '0x0', data: registerData(agentURIFor(name), codes) }]);
@@ -306,6 +315,7 @@
       status('birth.born', { id: id, name: name }, 'good');
     }).catch(function (e) {
       if (e && e.code === 4001) status('birth.rejected', null, 'bad');
+      else if (e && e.aq === 'confirm.cancelled') status('confirm.cancelled');
       else if (e && e.aq) status(e.aq, { tx: txHash ? short(txHash) : '' }, 'bad');
       else status('birth.failed', { msg: errMsg(e) }, 'bad');
     }).then(function () { state.busy = false; syncButtons(); });

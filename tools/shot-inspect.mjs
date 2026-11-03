@@ -21,7 +21,7 @@
        ・頭上に印が浮いていない（印はすべて家具の中か、弾けた印だけ）
        ・看板の ✓・✗ の数が本当の数に戻っている
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -47,7 +47,7 @@ const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 const ok   = (m) => console.log('    · ' + m);
 const inR = (r, x, y, pad = 0) => r && x >= r.x - pad && x <= r.x + r.w + pad && y >= r.y - pad && y <= r.y + r.h + pad;
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1860, height: 880 } });
 page.on('pageerror', e => { console.log('    ✗ JS error: ' + e.message); bad++; });
 await page.goto(FILE);
@@ -101,7 +101,7 @@ for (const vj of verdictBeats) {
   /* ---- 調べている最中 ---- */
   await at(vb.i, 0.25);
   const a = await read();
-  if (SHOTS) await page.screenshot({ path: `/tmp/claude-0/-home-claude/771479e9-d120-5f80-8905-16d478e5aced/scratchpad/insp-${vj.job}-a.png` });
+  if (SHOTS) await page.screenshot({ path: `${process.env.SHOT_DIR || (await import('node:os')).tmpdir()}/insp-${vj.job}-a.png` });
   const tag = `${vj.job} コマ${vb.i}（${vb.v}）`;
   for (const f of ['scan', 'lens', 'float']) if (a.fx.indexOf(f) === -1) fail(`${tag} 調べている最中に「${f}」が出ていない`);
   if (!a.beam) fail(`${tag} 光の起点・的が取れない`);
@@ -121,7 +121,7 @@ for (const vj of verdictBeats) {
   /* ---- 結果が出たあと ---- */
   await at(vb.i, 0.85);
   const r = await read();
-  if (SHOTS) await page.screenshot({ path: `/tmp/claude-0/-home-claude/771479e9-d120-5f80-8905-16d478e5aced/scratchpad/insp-${vj.job}-b.png` });
+  if (SHOTS) await page.screenshot({ path: `${process.env.SHOT_DIR || (await import('node:os')).tmpdir()}/insp-${vj.job}-b.png` });
   if (!r.burst) fail(`${tag} 結果が出たのに品物から印が弾けていない`);
   else {
     if (r.burst.ok !== want) fail(`${tag} 弾けた印の合否がログと違う（${r.burst.ok ? '✓' : '✗'}）`);

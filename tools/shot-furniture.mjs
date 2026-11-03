@@ -20,7 +20,7 @@
        ・看板の件数は、必ずその数字として画面に描かれている
        ・少なくとも1度は 0 でない件数が出る（検査が空回りしていない）
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -57,7 +57,7 @@ let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 const ok   = (m) => console.log('    · ' + m);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 for (const lang of ['ja', 'en']) {
   const page = await browser.newPage({ viewport: { width: 1860, height: 880 } });

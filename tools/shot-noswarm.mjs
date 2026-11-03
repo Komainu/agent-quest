@@ -25,7 +25,7 @@
        ・その直後に LIVE の新着が届いても → 0体のまま
        ・「すべて表示」を押したときだけ → 何体出てもよい（利用者の意思）
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -49,7 +49,7 @@ const MSGS = [];
 let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1820, height: 1000 } });
 page.on('pageerror', e => { console.log('    ✗ JS error: ' + e.message); bad++; });
 await page.goto(FILE);

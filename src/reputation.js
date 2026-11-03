@@ -429,6 +429,15 @@
       acc = a;
       return w.ensureBase();
     }).then(function () {
+      /* ★ 2026-11-02 ウォレットに頼む前に、アプリの中で中身を見せる */
+      status('confirm.look');
+      return AQ.confirm.ask({
+        after: $('robotStatus'),
+        what: t('confirm.what.fb', { id: target.id, stars: '★'.repeat(nStars) }),
+        rows: [AQ.confirm.party('ReputationRegistry', REP), { k: t('confirm.money'), v: t('confirm.gasOnly') }],
+        ok: t('confirm.okTx')
+      });
+    }).then(function () {
       status('card.confirm');
       return w.rpc('eth_sendTransaction', [{ from: acc, to: REP, value: '0x0', data: giveData(target.id, value, 0, TAG1, TAG2, '', '') + w.builderSuffix() }]);
     }).then(function (h) {
@@ -456,6 +465,7 @@
       pick(target);
     }).catch(function (e) {
       if (e && e.code === 4001) status('errand.rejected', null, 'bad');
+      else if (e && e.aq === 'confirm.cancelled') status('confirm.cancelled');
       else if (e && /Self-feedback/i.test(errMsg(e))) status('fb.self', null, 'bad');
       else status((e && e.aq) || 'errand.failed', (e && e.vars) || { msg: errMsg(e), tx: hash ? short(hash) : '' }, 'bad');
     }).then(function () { busy = false; if ($('fbGo')) $('fbGo').disabled = !picked; });

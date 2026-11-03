@@ -19,7 +19,7 @@
      ⑦ 部屋の一覧が読めないとき、赤い英語は出ない。街 ⇔ 部屋の切り替えで場面転換が出る。
         ?demo=1 で入門から始まり、⤴ で URL をコピーできる
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -33,7 +33,7 @@ let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 const ok   = (m) => console.log('    · ' + m);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 async function open(url, vp) {
   const page = await browser.newPage({ viewport: vp || { width: 1600, height: 950 } });

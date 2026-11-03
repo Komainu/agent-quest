@@ -2,7 +2,8 @@
    使い方: node tools/shot-tech.mjs   （dist/agent-quest.html を先に build）
    本物の technocore には書かない。通信を横取りし、書かれた中身を確かめる。
    tclk の枠は、本家のライブラリ（@flop-labs/tclk）で読み直し、同じ番号・同じ状態になるかを確かめる。 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
+import { withAutoConfirm } from './auto-confirm.mjs';
 import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -11,8 +12,8 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const TCLK_DIR = '/tmp/claude-0/-home-claude/771479e9-d120-5f80-8905-16d478e5aced/scratchpad/tclkpkg/node_modules/@flop-labs/tclk/dist/index.js';
-const tclk = fs.existsSync(TCLK_DIR) ? await import(TCLK_DIR) : null;
+/* 本家のライブラリは devDependencies に入れてある（npm ci）。無ければ読み直しの検査だけ飛ばす */
+const tclk = await import('@flop-labs/tclk').catch(() => null);
 void createRequire;
 
 const server = http.createServer((q, r) => { r.setHeader('Content-Type', 'text/html; charset=utf-8'); r.end(fs.readFileSync(path.join(ROOT, 'dist', 'agent-quest.html'))); });
@@ -23,7 +24,8 @@ const AGENT = { agentId: '4660', name: 'ピクセル', owner: OWNER, tx: '0x' + 
 
 let bad = 0;
 const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) bad++; };
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+withAutoConfirm(browser);   // ウォレットに頼む前の確認は自動で押す（tools/auto-confirm.mjs）
 
 /* technocore の Ed25519 署名を確かめる（did:key → 公開鍵） */
 const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
@@ -165,7 +167,7 @@ console.log('\n[取引の約束を練習する（tclk）]');
       ok(rec && rec.status === 'claimed' && rec.statement === fs5[1].statement && rec.secret === fs5[3].secret, 'paper レールの記録も決まりどおりの場所・形で「claimed」');
       ok(fs5[0].rails.join() === 'paper' && fs5[0].asset === 'USDC' && fs5[0].amount === '10000', 'レールは練習用の paper だけ（お金は動かない）');
     } catch (e) { ok(false, '本家ライブラリで読めない: ' + e.message); }
-  } else ok(false, '@flop-labs/tclk が見つからない（' + TCLK_DIR + '）');
+  } else ok(false, '@flop-labs/tclk が見つからない（npm ci で入ります）');
   await page.waitForTimeout(400);
   const b = await book(page);
   if (b.q.deal !== 'done') console.log('    deal=', await page.evaluate(() => localStorage.getItem('aq.myAgent.deal')), JSON.stringify(b.q));

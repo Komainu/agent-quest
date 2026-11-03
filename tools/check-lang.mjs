@@ -5,7 +5,8 @@
      ・英語の画面: ひらがな・カタカナ・漢字があれば ✗
      ・ほかのエージェントが書いた文（納品・ニュースの見出し・手紙など）は data-foreign の中にあるものとして除く
        （他人の文は訳さない＝作り話をしない） */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
+import { withAutoConfirm } from './auto-confirm.mjs';
 import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -32,7 +33,8 @@ function englishIn(s) {
   return m ? m.filter(x => x.split(/\s+/).filter(w => w.length > 1).length >= 2) : [];
 }
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+withAutoConfirm(browser);   // ウォレットに頼む前の確認は自動で押す（tools/auto-confirm.mjs）
 let bad = 0;
 async function collect(lang) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

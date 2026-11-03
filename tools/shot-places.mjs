@@ -21,7 +21,7 @@
      ・確かめる部屋の数は上限（AQ.places.MAX_PROBE）まで
      ・部屋の一覧が読めないときは、読めなかったと出る
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -58,7 +58,7 @@ let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 const ok   = (m) => console.log('    · ' + m);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1860, height: 1000 } });
 page.on('pageerror', e => { console.log('    ✗ JS error: ' + e.message); bad++; });
 
@@ -136,7 +136,7 @@ ok(`一覧: ${got.join(' / ')}（確かめた部屋 ${probed} / 上限 ${maxProb
 if (process.argv.includes('--shots')) {
   const r = await page.evaluate(() => { const a = document.getElementById('sideCol').getBoundingClientRect(), c = document.querySelector('canvas').getBoundingClientRect();
     return { x: a.left - 10, y: c.top, width: a.width + 20, height: c.height }; });
-  await page.screenshot({ path: '/tmp/claude-0/-home-claude/771479e9-d120-5f80-8905-16d478e5aced/scratchpad/places.png', clip: r });
+  await page.screenshot({ path: (process.env.SHOT_DIR || (await import('node:os')).tmpdir()) + '/places.png', clip: r });
 }
 
 /* 2) 信用しない文字 */

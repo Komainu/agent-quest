@@ -18,7 +18,7 @@
      ・運搬中は「いま動いている本人の手に、実際に描かれている」ことを要求
      ・引き受けた子と納品した子が違う形（実データでよく起きる）も試す
      ・依頼モードとエージェントモードの両方で試す */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -48,7 +48,7 @@ const CASES = [
 let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 for (const cs of CASES) {
   for (const mode of ['job', 'agent']) {

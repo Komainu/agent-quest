@@ -16,7 +16,7 @@
        ・失敗の件数は札の✗と同じ赤で出る
        ・HUD の数字と操作欄の数字が二重にならない
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -43,7 +43,7 @@ let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 const ok   = (m) => console.log('    · ' + m);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 /* ---------- 1) 掲示板：合否の印と、消えたはずの英単語 ---------- */
 {

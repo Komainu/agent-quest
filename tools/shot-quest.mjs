@@ -5,13 +5,14 @@
      ・x402 の支払いで、お店が builder-code の拡張を出していれば、このアプリのコードを s に足して返す
      ・最後のクエスト：Base の取引の中身に Builder Code の印があるかを確かめる
      ・全部そろったら「ぜんぶクリア」 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
+import { withAutoConfirm } from './auto-confirm.mjs';
 import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-const require = createRequire('/tmp/claude-0/-home-claude/771479e9-d120-5f80-8905-16d478e5aced/scratchpad/k/');
+const require = createRequire(import.meta.url);
 const { privateKeyToAccount } = require('viem/accounts');
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -30,7 +31,8 @@ let bad = 0;
 const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) bad++; };
 /* 2026-10-19 クエストの窓は「1画面に1ステップ」（src/wizard.js）。先のステップの部品を押す前に、そのステップへ進める */
 const wz = (page, n) => page.evaluate((n) => { if (window.AQ && AQ.wizard && AQ.wizard.at()) AQ.wizard.go(n, false); }, n).then(() => page.waitForTimeout(150));
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+withAutoConfirm(browser);   // ウォレットに頼む前の確認は自動で押す（tools/auto-confirm.mjs）
 
 async function setup(opts = {}) {
   const page = await browser.newPage({ viewport: opts.vp || { width: 1440, height: 900 } });
@@ -740,7 +742,7 @@ console.log('\n[はじめの画面：Agent Quest・クエストがいちばん�
     const v = await page.evaluate(() => ({ logo: document.querySelector('.start-logo').innerText, title: document.title, h1: document.querySelector('header h1').innerText,
       first: document.querySelector('.start-card > section, .start-card > h3').id, dots: document.querySelectorAll('#startQuestDots li').length,
       go: document.getElementById('startQuestGoT').innerText, focus: document.activeElement && document.activeElement.id }));
-    ok(v.logo === 'AGENT QUEST' && v.title === 'Agent Quest' && v.h1 === 'AGENT QUEST', 'アプリの名前は Agent Quest（ロゴ・題名・見出し）');
+    ok(v.logo === 'AGENT QUEST' && /^Agent Quest( — |$)/.test(v.title) && v.h1 === 'AGENT QUEST', 'アプリの名前は Agent Quest（ロゴ・題名・見出し）');
     ok(v.first === 'startQuest' && v.dots === 13, 'はじめの画面のいちばん上はクエスト（13 の印）');
     ok(/クエストを始める/.test(v.go) && v.focus === 'startQuestGo', '初めての人には「▶ クエストを始める」。最初からそのボタンにフォーカス');
     await page.click('#startQuestGo'); await page.waitForTimeout(300);

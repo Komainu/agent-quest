@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Safety — Agent Quest</title>
+<meta name="description" content="Agent Quest がウォレットに頼むこと・頼まないこと / What Agent Quest asks your wallet for, and what it never asks">
+<!--CANONICAL-->
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<meta name="theme-color" content="#16223a">
+<!-- 2026-11-02: build.js が deploy/safety.html に書き出す。日本語と英語は別々の節で、どちらか一方だけを見せる -->
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #0c0d14; color: #e7eaf4; font: 15px/1.7 system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 40px; }
+  h1 { font-size: 1.35rem; color: #ffd36b; margin: 0 0 6px; }
+  h2 { font-size: 1.05rem; color: #8fc1ff; margin: 26px 0 8px; }
+  p, li { color: #cfd9ea; }
+  a { color: #8fc1ff; }
+  code { font: .85rem/1.5 ui-monospace, "IBM Plex Mono", monospace; overflow-wrap: anywhere; }
+  ul { padding-left: 1.2em; }
+  li { margin: 4px 0; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .brand { color: #ffd36b; font-weight: 700; letter-spacing: .06em; text-decoration: none; }
+  .lang button { font: inherit; font-size: .82rem; color: #e7eaf4; background: #141826; border: 1px solid #4b6fa8; border-radius: 8px; padding: 2px 10px; cursor: pointer; }
+  .lang button[aria-pressed="true"] { background: #1d5fc4; border-color: #1d5fc4; }
+  .never li::marker { content: "✕  "; color: #ff8a7a; }
+  .card { border: 1px solid #272c3e; border-radius: 10px; background: #141826; padding: 4px 14px; }
+  footer { margin-top: 30px; font-size: .82rem; color: #939bb4; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <a class="brand" href="./">AGENT QUEST</a>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-l="ja" aria-pressed="true">日本語</button>
+      <button type="button" data-l="en" aria-pressed="false">English</button>
+    </div>
+  </div>
+
+  <article lang="ja" id="ja">
+    <h1>安全について</h1>
+    <p>Agent Quest は、初心者向けのドット絵の学習アプリです。自分のウォレットをつなぎ、Base に ERC-8004 のエージェントを作って、短いクエストで動かしながら、オンチェーンの AI エージェントのしくみを学びます。無料で、サーバーを持たない1ページだけのアプリです。</p>
+
+    <h2>ウォレットに頼むこと</h2>
+    <p>どれも、ボタンを押したときだけ頼みます。ページを開いただけでは頼みません。署名や取引の前には、アプリの中で中身（何を頼むか・相手・上限と期限）を見せ、確認のボタンを押してからウォレットを呼びます。</p>
+    <ul>
+      <li><b>接続</b>（eth_requestAccounts）：アドレスを教えてもらうだけです。</li>
+      <li><b>ERC-8004 公式の登録先への取引</b>（eth_sendTransaction）：エージェントの登録（register）、名刺の書き換え（setAgentURI）、ほかのエージェントへの評価（giveFeedback）。どれもお金は送らず、ガス代だけです。</li>
+      <li><b>x402 の支払いの署名</b>（eth_signTypedData_v4）：「ニュースを買う」などを押したときだけ。Base の USDC で、決まったお店に、お店の言い値（ニュースは 0.01 USDC まで）を1回だけ払う署名（EIP-3009 の TransferWithAuthorization）です。お店ごとに受取先と上限をアプリの中に固定してあり、違う条件が来たら署名を頼まずに止めます。期限は最長5分です。</li>
+    </ul>
+
+    <h2>使うコントラクト（Base）</h2>
+    <div class="card">
+      <ul>
+        <li>IdentityRegistry（ERC-8004）：<a href="https://basescan.org/address/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432" target="_blank" rel="noopener"><code>0x8004A169FB4a3325136EB29fA0ceB6D2e539a432</code></a></li>
+        <li>ReputationRegistry（ERC-8004）：<a href="https://basescan.org/address/0x8004BAa17C55a88189AE136b182e5fdA19dE9b63" target="_blank" rel="noopener"><code>0x8004BAa17C55a88189AE136b182e5fdA19dE9b63</code></a></li>
+        <li>Base の USDC：<a href="https://basescan.org/address/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" target="_blank" rel="noopener"><code>0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913</code></a></li>
+      </ul>
+    </div>
+
+    <h2>頼まないこと</h2>
+    <ul class="never">
+      <li>トークンの使用許可（approve・permit・setApprovalForAll）は頼みません。</li>
+      <li>自前のコントラクトを作ったり、呼んだりしません。</li>
+      <li>シードフレーズ（復元フレーズ）や秘密鍵を入力してもらうことはありません。</li>
+      <li>開発者へお金を送ることはありません。</li>
+    </ul>
+    <p>もしこのアプリの名前でシードフレーズや秘密鍵を聞かれたら、それは偽物です。入力しないでください。</p>
+
+    <h2>ソースコードと連絡先</h2>
+    <p>ソースコードは <a href="https://github.com/Komainu/agent-quest" target="_blank" rel="noopener">GitHub（Komainu/agent-quest）</a> で読めます。気になることは <a href="https://github.com/Komainu/agent-quest/issues" target="_blank" rel="noopener">Issues</a> で知らせてください。</p>
+    <footer><a href="./">Agent Quest にもどる</a></footer>
+  </article>
+
+  <article lang="en" id="en" hidden>
+    <h1>Safety</h1>
+    <p>Agent Quest is a free, beginner-friendly pixel-art learning app. You connect your own wallet, create an ERC-8004 agent on Base, and run it through short quests to learn how onchain AI agents work. It is a single static page with no backend.</p>
+
+    <h2>What it asks your wallet for</h2>
+    <p>Only when you press a button, never just because the page was opened. Before any signature or transaction, the app first shows you what will be asked (what it is, who it goes to, the limit and how long it is valid), and calls your wallet only after you press the confirm button.</p>
+    <ul>
+      <li><b>Connect</b> (eth_requestAccounts): only to learn your address.</li>
+      <li><b>Transactions to the official ERC-8004 registries</b> (eth_sendTransaction): register an agent (register), update its card (setAgentURI), and rate another agent (giveFeedback). None of them send money; you only pay gas.</li>
+      <li><b>x402 payment signature</b> (eth_signTypedData_v4): only when you press a button such as "buy news". It signs a single payment of the shop's asking price (up to 0.01 USDC for news) in USDC on Base to a fixed shop (EIP-3009 TransferWithAuthorization). Each shop's receiving address and limit are fixed in the app; if the shop asks for anything else, the app stops without asking for a signature. The signature is valid for at most 5 minutes.</li>
+    </ul>
+
+    <h2>Contracts it uses (Base)</h2>
+    <div class="card">
+      <ul>
+        <li>IdentityRegistry (ERC-8004): <a href="https://basescan.org/address/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432" target="_blank" rel="noopener"><code>0x8004A169FB4a3325136EB29fA0ceB6D2e539a432</code></a></li>
+        <li>ReputationRegistry (ERC-8004): <a href="https://basescan.org/address/0x8004BAa17C55a88189AE136b182e5fdA19dE9b63" target="_blank" rel="noopener"><code>0x8004BAa17C55a88189AE136b182e5fdA19dE9b63</code></a></li>
+        <li>USDC on Base: <a href="https://basescan.org/address/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" target="_blank" rel="noopener"><code>0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913</code></a></li>
+      </ul>
+    </div>
+
+    <h2>What it never asks for</h2>
+    <ul class="never">
+      <li>No token approvals (approve, permit, setApprovalForAll).</li>
+      <li>No contracts of its own: it never deploys or calls custom contracts.</li>
+      <li>It never asks for your secret recovery phrase or private key.</li>
+      <li>It never sends funds to the developer.</li>
+    </ul>
+    <p>If anything using this app's name asks for your recovery phrase or private key, it is fake. Please do not enter it.</p>
+
+    <h2>Source code and contact</h2>
+    <p>The source code is on <a href="https://github.com/Komainu/agent-quest" target="_blank" rel="noopener">GitHub (Komainu/agent-quest)</a>. Please report concerns in <a href="https://github.com/Komainu/agent-quest/issues" target="_blank" rel="noopener">Issues</a>.</p>
+    <footer><a href="./">Back to Agent Quest</a></footer>
+  </article>
+</main>
+<script>
+(function () {
+  'use strict';
+  /* 言語：?lang= → アプリで前に選んだ言語（aq.lang）→ ブラウザの言語 の順 */
+  var q = (location.search.match(/[?&]lang=(ja|en)\b/) || [])[1], saved = null;
+  try { saved = localStorage.getItem('aq.lang'); } catch (e) {}
+  var lang = q || (saved === 'en' || saved === 'ja' ? saved : (/^ja\b/i.test(navigator.language || '') ? 'ja' : 'en'));
+  function set(l) {
+    lang = l === 'en' ? 'en' : 'ja';
+    document.documentElement.lang = lang;
+    document.getElementById('ja').hidden = lang !== 'ja';
+    document.getElementById('en').hidden = lang !== 'en';
+    document.title = lang === 'ja' ? '安全について — Agent Quest' : 'Safety — Agent Quest';
+    Array.prototype.forEach.call(document.querySelectorAll('.lang button'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-l') === lang ? 'true' : 'false'); });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.lang button'), function (b) {
+    b.addEventListener('click', function () { set(b.getAttribute('data-l')); try { localStorage.setItem('aq.lang', lang); } catch (e) {} });
+  });
+  set(lang);
+})();
+</script>
+</body>
+</html>

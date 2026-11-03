@@ -3,7 +3,8 @@
      ・財布が2つあるとき、身分証ができたあとでも「どの財布を使うか」を選べる
      ・x402 のお使いで、前回の同じ額の支払いを今回の支払いと取り違えない
      ・郵便受けの名刺は、本文がその相手の did で始まるものだけ使う */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
+import { withAutoConfirm } from './auto-confirm.mjs';
 import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -18,7 +19,8 @@ const OTHER = '0x2222222222222222222222222222222222222222';
 const AGENT = { agentId: '4660', name: 'ピクセル', owner: OWNER, tx: '0xab', chain: 8453, t: Date.now() };
 let bad = 0;
 const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) bad++; };
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+withAutoConfirm(browser);   // ウォレットに頼む前の確認は自動で押す（tools/auto-confirm.mjs）
 const st = (p) => p.evaluate(() => document.getElementById('robotStatus').innerText);
 
 async function open(init, arg) {

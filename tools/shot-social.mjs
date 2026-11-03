@@ -1,7 +1,8 @@
 /* tools/shot-social.mjs — 「ほかのエージェントを評価」「郵便受け」の検査（2026-10-11）
    使い方: node tools/shot-social.mjs   （dist/agent-quest.html を先に build）
    本物のチェーン・technocore には書かない。通信を横取りして、送られた中身を確かめる。 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
+import { withAutoConfirm } from './auto-confirm.mjs';
 import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -39,7 +40,8 @@ function encodeAll(rows) {
   return '0x' + head + parts.join('');
 }
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+withAutoConfirm(browser);   // ウォレットに頼む前の確認は自動で押す（tools/auto-confirm.mjs）
 async function setup(opts = {}) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const errs = [], sent = [], posts = [], notes = [];

@@ -29,7 +29,7 @@
      「その段階の記録がログにあるか」を文字を使わずに正しく表している
      ことも確かめる（背景メモにある、①〜④の事実が残る2か所のうち
      もう1つ）。 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -52,7 +52,7 @@ const MSGS = [
 let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 for (const lang of ['ja', 'en']) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

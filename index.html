@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agent Quest</title>
+<title>Agent Quest — learn onchain AI agents on Base</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,6 +45,8 @@
       </section>
       <button id="startLive" type="button" class="start-door"><b id="startLiveT"></b><span id="startLiveS"></span></button>
       <button id="startDemo" type="button" class="start-door"><b id="startDemoT"></b><span id="startDemoS"></span></button>
+      <!-- 2026-11-02: アプリがウォレットに頼むこと・しないこと（deploy/safety.html）。目立ちすぎないように小さく -->
+      <small class="start-safety"><a id="startSafety" href="safety.html" target="_blank" rel="noopener"></a></small>
     </div>
   </div>
 
@@ -490,6 +492,11 @@
     </details>
   </section>
 
+  <!-- 2026-11-02: ページの下。安全について・このアプリのソースコード（GitHub） -->
+  <footer class="site-foot" id="siteFoot">
+    <a id="footSafety" href="safety.html" target="_blank" rel="noopener"></a> ·
+    <a id="footGithub" href="https://github.com/Komainu/agent-quest" target="_blank" rel="noopener"></a>
+  </footer>
 </main>
 
 <!-- ============ 読み込み順 ============
@@ -536,6 +543,7 @@
 <script src="data/runs/burst.js"></script>
 <script src="data/runs/team.js"></script>
 
+<script src="src/confirm.js"></script>
 <script src="src/birth.js"></script>
 <script src="src/activity.js"></script>
 <script src="src/translate.js"></script>

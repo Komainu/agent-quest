@@ -20,7 +20,7 @@
      描画側が数えた「頭上の状態表示（lastBadges）」「描いた合否の印
      （lastMarks）」と、DOM の表示状態・aria-label。
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -45,7 +45,7 @@ let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 const ok   = (m) => console.log('    · ' + m);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 /* ---------- 1) 掲示板のログ：テロップ枠は無く、頭上に状態が出る ---------- */
 {

@@ -19,13 +19,13 @@
      ・② → kibble に LIVE でつながり、エージェントの一覧（選ぶ前）から始まる
      ・プログラムからログを読んだとき（他の検査の入り方）は、画面は自動で閉じる
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FILE = process.env.AQ_FILE ? 'file://' + process.env.AQ_FILE : 'file://' + path.join(ROOT, 'dist', 'agent-quest.html');
-const SCR = '/tmp/claude-0/-home-claude/771479e9-d120-5f80-8905-16d478e5aced/scratchpad';
+const SCR = process.env.SHOT_DIR || (await import('node:os')).tmpdir();
 const SHOTS = process.argv.includes('--shots');
 
 const WALLET = '0x1234567890abcdef1234567890abcdef12345678';
@@ -53,7 +53,7 @@ let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 const ok   = (m) => console.log('    · ' + m);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 async function fresh(lang) {
   const page = await browser.newPage({ viewport: { width: 1600, height: 950 } });
   page.on('pageerror', e => { console.log('    ✗ JS error: ' + e.message); bad++; });

@@ -14,7 +14,7 @@
 
    ★ 事実は消さない。件数（依頼 n 件／エージェント n 体）と失敗件数は
      残っていることを同時に確かめる（説明文だけを消す、が方針）。 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -40,7 +40,7 @@ let bad = 0;
 const fail = (m) => { console.log('    ✗ ' + m); bad++; };
 const ok   = (m) => console.log('    · ' + m);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 
 /* ---------- 1) 支払いの無いログ ---------- */
 for (const vp of [{ width: 1860, height: 880 }, { width: 1280, height: 800 }]) {

@@ -24,7 +24,7 @@
      E. エージェントを選んだ直後から 3 秒、フレームごとのロボットの移動が
         「1 フレームぶん」を大きく超えない
 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bigLog } from './perf-big.mjs';
@@ -39,7 +39,7 @@ const ok   = (m) => console.log('    · ' + m);
 const M = bigLog(2600, 215);
 const head = M.slice(0, M.length - 200), tail = M.slice(M.length - 200);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1860, height: 880 } });
 page.on('pageerror', e => { console.log('    ✗ JS error: ' + e.message); bad++; });
 await page.goto(FILE);

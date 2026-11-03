@@ -10,7 +10,7 @@
      書き込み     … 板の前で止まり、メモを腕で貼る
      ④判定       … 納品口で止まって品物を拾い、検品台へ運んで置く
    どれも「つかむ／貼る瞬間」まで札は元の場所にあり、その瞬間に移ること。 */
-import { chromium } from '/home/claude/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -29,7 +29,7 @@ const msgs = [
 let bad = 0;
 const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) bad++; };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 page.on('pageerror', e => { console.log('  ✗ JS error: ' + e.message); bad++; });
 await page.goto(FILE);
