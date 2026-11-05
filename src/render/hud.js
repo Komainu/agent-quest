@@ -2091,6 +2091,25 @@
       el.usdcLbl.textContent    = t('hud.usdc');
       el.creditsLbl.textContent = t('hud.credits');
       el.retriesLbl.textContent = t('hud.retries');
+      /* ★ 2026-11-05（「USDC / CREDITS / RETRIES が何の数値か分からない」）:
+         押すか指（マウス）を乗せると、短い説明が HUD のすぐ下に出る（css の .hud [data-tip]）。 */
+      [[el.hudUsdc, 'hud.usdcTip'], [el.hudCredits, 'hud.creditsTip'], [el.hudRetries, 'hud.retriesTip']].forEach(function (p) {
+        var n = p[0]; if (!n || typeof n.setAttribute !== 'function' || typeof n.getAttribute !== 'function') return;
+        n.setAttribute('data-tip', t(p[1]));
+        n.setAttribute('aria-label', t(p[1]));
+        if (n.getAttribute('tabindex') == null) n.setAttribute('tabindex', '0');
+        if (n.getAttribute('role') == null) n.setAttribute('role', 'button');
+        if (!n._aqTip && n.addEventListener) {
+          n._aqTip = true;
+          n.addEventListener('click', function () {
+            var on = !n.classList.contains('tip-on');
+            [el.hudUsdc, el.hudCredits, el.hudRetries].forEach(function (o) { if (o) o.classList.remove('tip-on'); });
+            n.classList.toggle('tip-on', on);
+          });
+          n.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); n.click(); } else if (ev.key === 'Escape') n.classList.remove('tip-on'); });
+          n.addEventListener('blur', function () { n.classList.remove('tip-on'); });
+        }
+      });
       Array.prototype.forEach.call(el.runSelect.options, function (o) {
         if (o.dataset.key) o.textContent = t(o.dataset.key);
       });

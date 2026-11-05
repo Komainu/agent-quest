@@ -1915,3 +1915,41 @@ button.wz-chip:hover { background: #193324; }
 .site-foot a { color: var(--muted); }
 .start-safety { display: block; margin-top: 10px; text-align: center; font-size: .74rem; }
 .start-safety a { color: #939bb4; }
+
+/* ---- 2026-11-05: ウォレットなしで試した人の指摘への小さな直し ---------------- */
+/* いま見ているもの（作り話のデモ／LIVE／読みこんだ記録）の札。やさしい表示でも必ず出す */
+.hud { position: relative; }
+/* HUD の行には場所を取らず（並びも絵の位置も動かさない）、絵の左上の角に貼る */
+.hud .mode-tag { position: absolute; left: 6px; top: calc(100% + 6px); z-index: 30; pointer-events: auto;
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; border: 2px solid currentColor; box-shadow: 0 2px 8px rgba(0,0,0,.55);
+  font-family: "DotGothic16", "Press Start 2P", monospace; font-size: .72rem; letter-spacing: .02em; text-transform: none; line-height: 1.2; white-space: nowrap; cursor: help; }
+.hud .mode-tag:empty { display: none; }
+.hud .mode-tag[data-mode="demo"] { color: #ffd35c; background: #2b2610; }
+.hud .mode-tag[data-mode="demo"]::before { content: "🎭"; }
+.hud .mode-tag[data-mode="live"] { color: #5fe39a; background: #0f2a1c; }
+.hud .mode-tag[data-mode="live"]::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #5fe39a; box-shadow: 0 0 6px #5fe39a; }
+.hud .mode-tag[data-mode="log"] { color: #9fd3ff; background: #12233a; }
+.hud .mode-tag[data-mode="log"]::before { content: "📼"; }
+body.easy .hud > span.mode-tag { visibility: visible; }
+
+/* HUD の数字（USDC / CREDITS / RETRIES）：押すか指を乗せると、HUD のすぐ下に短い説明 */
+.hud [data-tip] { cursor: help; border-radius: 3px; }
+.hud [data-tip]:focus-visible { outline: 2px solid #ffd36b; outline-offset: 2px; }
+.hud [data-tip]:hover::after, .hud [data-tip]:focus-visible::after, .hud [data-tip].tip-on::after {
+  content: attr(data-tip); position: absolute; left: 0; right: 0; top: 100%; z-index: 40; margin-top: 2px;
+  padding: 8px 10px; border-radius: 6px; border: 1px solid #4b6fa8; background: #0f1828; color: #e6ecf5; box-shadow: 0 6px 18px rgba(0,0,0,.5);
+  font-family: system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif; font-size: .8rem; line-height: 1.55; letter-spacing: 0; text-transform: none; white-space: normal; pointer-events: none; }
+
+/* まだ遊べないクエスト：一覧では押せる（説明を読める）が、🔒 の見た目のまま */
+.quest.locked { cursor: pointer; }
+.quest-win-lock { margin: 0; padding: 10px 12px; border-radius: 10px; border: 1px dashed #ffd35c; background: rgba(255,211,92,.08); color: #ffe9a8; font-size: .95rem; line-height: 1.6; }
+.quest-win-lock[hidden] { display: none; }
+.quest-win.q-locked .quest-win-next, .quest-win.q-locked .quest-win-act, .quest-win.q-locked .quest-win-slot, .quest-win.q-locked .quest-cta,
+.quest-win.q-locked .quest-win-proof, .quest-win.q-locked .wz-head { display: none !important; }
+
+/* はじめの画面・自分のエージェントの窓：右上の言語切り替え（.lang-pill）の下に、窓の × が潜りこまないよう
+   どの画面幅でも上を空ける（768〜1024px で × が言語切り替えに覆われて押せなかった） */
+.start-screen { padding-top: 60px; }
+.start-card { max-height: calc(100vh - 76px); }
+@media (max-width: 720px) { .start-card { max-height: calc(100vh - 72px); } }
+@media (max-width: 560px) { .hud .mode-tag { padding: 2px 6px; font-size: .66rem; left: 4px; top: calc(100% + 4px); } }

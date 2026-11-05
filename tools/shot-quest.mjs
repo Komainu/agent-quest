@@ -100,7 +100,7 @@ async function setup(opts = {}) {
 }
 const book = (page) => page.evaluate(() => ({
   count: document.getElementById('questCount').innerText,
-  q: Object.fromEntries([...document.querySelectorAll('#questList .quest')].map(b => [b.dataset.q, b.classList.contains('done') ? 'done' : (b.disabled ? 'locked' : 'open')])),
+  q: Object.fromEntries([...document.querySelectorAll('#questList .quest')].map(b => [b.dataset.q, b.classList.contains('done') ? 'done' : (b.classList.contains('locked') ? 'locked' : 'open')])),
   toast: document.getElementById('questToast').className.includes('show') ? document.getElementById('questToast').innerText : '',
   say: (document.getElementById('questSay') || {}).innerText || '',
   door: (document.getElementById('startBirthS') || {}).innerText || '' }));
@@ -846,7 +846,7 @@ console.log('\n[クエスト1の窓は「つなぐ」だけ（2026-10-22）]');
   await page.click('#questList .quest[data-q="connect"]'); await page.waitForTimeout(400);
   ok(await seen('birthConnect') && !(await seen('birthName')) && !(await seen('birthGo')), 'クエスト1の窓には「ウォレットをつなぐ」だけ（名前の欄と「作る」は出ない）');
   await page.click('#birthConnect'); await page.waitForTimeout(800);
-  await page.waitForFunction(() => !document.querySelector('#questList .quest[data-q="create"]').disabled, null, { timeout: 5000 }).catch(() => {});
+  await page.waitForFunction(() => !document.querySelector('#questList .quest[data-q="create"]').classList.contains('locked'), null, { timeout: 5000 }).catch(() => {});
   await page.click('#questWinClose'); await page.waitForTimeout(200);
   await page.click('#questList .quest[data-q="create"]', { timeout: 5000 }).catch(() => {}); await page.waitForTimeout(400);
   ok(await seen('birthName') && await seen('birthGo'), 'クエスト2の窓には、名前の欄と「作る」が出る');
