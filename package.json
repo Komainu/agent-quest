@@ -2,7 +2,7 @@
   "name": "agent-quest",
   "private": true,
   "description": "Agent Quest — a pixel-art learning app for building and running your first onchain AI agent on Base",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build": "node build.js",
     "test": "node tools/run-tests.mjs"

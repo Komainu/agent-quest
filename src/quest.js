@@ -250,7 +250,11 @@
   }
   function openWin(id) {
     var q = QUESTS.filter(function (x) { return x.id === id; })[0], w = WIN[id], box = $('questWin');
-    if (!q || !box || locked(q)) return;
+    if (!q || !box) return;
+    /* ★ 2026-11-05（「ロック中のクエストの中身が見られない」）: まだ遊べないクエストも窓は開く。
+       ただし出すのは説明（何をするか・学べること・確かめ方）と「まず 1・2 を終えると遊べます」だけ。
+       操作のボタン・パネル・案内の手順は出さない（押せるのに動かない、を作らない）。 */
+    var lockNow = !q.done() && locked(q);
     restoreNodes();
     winGen++;
     /* ★ 2026-10-19: 前のクエストの結果の文（「お使い成功！」など）が次のクエストの窓に
@@ -261,24 +265,29 @@
       });
     }
     lastWinId = id;
-    win.id = id; selected = id;
+    win.id = id; win.locked = lockNow; selected = id;
+    box.classList.toggle('q-locked', lockNow);
     box.setAttribute('data-q', id);   // 2026-10-22 クエストごとの見た目の出し分け（例：クエスト1では名前の欄を出さない）
     var act = $('questWinAct'); if (act) act.innerHTML = '';
     if ($('questWinSlot')) $('questWinSlot').innerHTML = '';
-    w.nodes.forEach(moveIn);
-    var say = $('questSay'); if (say) { moveIn('questSay'); say.textContent = ''; say.className = 'quest-say'; }
-    if (w.panel) panel(w.panel, null, true);
-    if (w.extra && act) w.extra(act);
-    if (w.act && act) {
+    if (!lockNow) {
+      w.nodes.forEach(moveIn);
+      var say = $('questSay'); if (say) { moveIn('questSay'); say.textContent = ''; say.className = 'quest-say'; }
+      if (w.panel) panel(w.panel, null, true);
+      if (w.extra && act) w.extra(act);
+    }
+    if (!lockNow && w.act && act) {
       var b = mk('button', 'go quest-win-go', t(w.act)); b.type = 'button'; b.id = 'questWinGo';
       b.addEventListener('click', function () { q.open(); setTimeout(render, 300); });
       act.appendChild(b);
     }
     box.hidden = false;
     fillWin();
-    if (AQ.birth && AQ.birth.checkOwner) AQ.birth.checkOwner();
-    if (w.prep) w.prep();
-    if (AQ.wizard) AQ.wizard.start(id, w.panel || (id === 'judge' ? 'robotJobs' : null), function () { return q.done(); });   // 2026-10-19: 1画面に1ステップ
+    if (!lockNow) {
+      if (AQ.birth && AQ.birth.checkOwner) AQ.birth.checkOwner();
+      if (w.prep) w.prep();
+      if (AQ.wizard) AQ.wizard.start(id, w.panel || (id === 'judge' ? 'robotJobs' : null), function () { return q.done(); });   // 2026-10-19: 1画面に1ステップ
+    }
     var body = $('questWinBody'); if (body) body.scrollTop = 0;
     setTimeout(function () { var c = $('questWinClose'); if (c && !box.contains(document.activeElement)) c.focus(); }, 30);
     render();
@@ -286,6 +295,7 @@
   function fillWin() {
     var id = win.id, box = $('questWin'); if (!id || !box || box.hidden) return;
     var q = QUESTS.filter(function (x) { return x.id === id; })[0], i = QUESTS.indexOf(q), done = q.done();
+    if (win.locked && (done || !locked(q))) { openWin(id); return; }   // 説明だけの窓を開いている間に遊べるようになったら、ふつうの窓に開き直す
     $('questWinStep').textContent = t('quest.win.step', { n: i + 1, total: QUESTS.length }) + ' · ' + t('quest.cost.' + q.cost);
     $('questWinTitle').textContent = q.icon + ' ' + t('quest.' + id + '.title');
     $('questWinWhat').textContent = t('quest.' + id + '.what');
@@ -294,6 +304,8 @@
     $('questWinClose').textContent = '✕ ' + t('quest.win.close');
     $('questWinClose').setAttribute('aria-label', t('quest.win.close'));
     $('questWinBack').textContent = '◀ ' + t('quest.win.back');
+    var lk = $('questWinLock'), lockNow = !!win.locked && !done;
+    if (lk) { lk.hidden = !lockNow; lk.textContent = lockNow ? t(id === 'create' ? 'quest.win.lock1' : 'quest.win.lock2') : ''; }
     var st = $('questWinState'); st.hidden = !done; st.textContent = done ? t('quest.win.cleared') : '';
     box.classList.toggle('q-done', !!done);   // 2026-10-24 クリアしたら「やること」のボタンを済みの見た目に（取り消し線）
     renderProof(id, done);
@@ -305,7 +317,7 @@
       cta.hidden = !showCta;
       if (showCta) { $('questWinCtaT').textContent = t('quest.cta.hello'); $('questWinCtaS').textContent = t('quest.cta.helloS'); }
     }
-    var nx = nextOpen(id), nb = $('questWinNext');
+    var nx = lockNow ? null : nextOpen(id), nb = $('questWinNext');
     nb.hidden = !nx; nb.textContent = nx ? t('quest.win.next', { name: t('quest.' + nx.id + '.title') }) + ' ▶' : '';
     nb.classList.toggle('ready', done);
     var go = $('questWinGo'); if (go && WIN[id].act) go.textContent = t(WIN[id].act);
@@ -447,7 +459,8 @@
     if (win.id === 'judge' && $('robotJobs')) $('robotJobs').hidden = true;
     var was = win.id;
     winGen++;
-    box.hidden = true; win.id = null; selected = null;
+    box.hidden = true; win.id = null; win.locked = false; selected = null;
+    box.classList.remove('q-locked');
     box.removeAttribute('data-q');
     render();
     var back = document.querySelector('#questList .quest[data-q="' + was + '"]');   // クエスト帳の、いま閉じたクエストへ戻る
@@ -674,7 +687,8 @@
       mid.appendChild(mk('small', null, t('quest.cost.' + q.cost)));
       b.appendChild(mid);
       if (isNext) b.appendChild(mk('span', 'quest-badge', t('quest.next.badge')));
-      b.disabled = lock;
+      /* 2026-11-05: 🔒 でも押せる（説明だけ読める窓が開く）。押せないことは aria-disabled ではなく題で伝える */
+      if (lock) b.title = t(q.id === 'create' ? 'quest.win.lock1' : 'quest.win.lock2');
       b.addEventListener('click', function () { openWin(q.id); });
       list.appendChild(b);
     });

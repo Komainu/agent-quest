@@ -126,6 +126,7 @@
     wipeIcon:    $('wipeIcon'),
     recDot:      $('recDot'),
     toast:       $('toast'),
+    modeTag:     $('modeTag'),
     shareBtn:    $('shareBtn'),
     recapSteps:  $('recapSteps'),
     recapFacts:  $('recapFacts'),
@@ -238,6 +239,7 @@
       relabelStart();
       relabelEasy();
       relabelSound();
+      syncModeTag();
       relabelShare();
       relabelCmd();
       if (AQ.birth) AQ.birth.relabel();
@@ -1524,6 +1526,20 @@
        （本物のログだと思わせたら嘘になる）。 */
     el.hint.textContent = isIntro ? AQ.i18n.t('x402.introFake') : '';
     el.hint.hidden = !isIntro;
+    syncModeTag();
+  }
+
+  /* ★ 2026-11-05（ウォレットなしで試した人「デモの再生と LIVE が見分けにくい」）:
+     いま見ているものが ①作り話のデモ ②LIVE（本物の掲示板）③読みこんだ記録 のどれかを、
+     絵の左上の角の札で出す（#modeTag。HUD の並びには場所を取らない）。LIVE につながっている間はいつも LIVE。 */
+  var dataSrc = 'demo';
+  function modeNow() { return (AQ.live && AQ.live.running) ? 'live' : dataSrc; }
+  function syncModeTag() {
+    var tag = el.modeTag; if (!tag || typeof tag.setAttribute !== 'function') return;
+    var m = modeNow(), t = AQ.i18n.t, text = t('mode.' + m), tip = t('mode.' + m + 'Tip');
+    if (tag.getAttribute('data-mode') !== m) tag.setAttribute('data-mode', m);
+    if (tag.textContent !== text) tag.textContent = text;
+    if (tag.title !== tip) tag.title = tip;
   }
 
   /** コマの「代表の出来事」の目印（組み直しても同じ出来事のコマを探せるように） */
@@ -1658,6 +1674,7 @@
        4本（デモ・ファイル読み込み・LIVE の初回・最新に追いつく）あるが、
        どれも必ずこの loadEvents を通るので、解除はここ1か所でよい。 */
     isIntro = false;
+    dataSrc = 'log';            // 2026-11-05: 何を読んだか（札の出し分け）。デモは loadRun が 'demo' に直す
     liveFollowing = true;
     updateFocusInputUI();
     if (AQ.hud.resetProgressTracking) AQ.hud.resetProgressTracking();
@@ -2093,6 +2110,7 @@
     stopLiveQuiet();
     loadEvents(AQ.runs[key]);          // ここで isIntro は false に戻る
     isIntro = (key === INTRO_RUN);     // 入門を読んだときだけ、そのあと立てる
+    dataSrc = 'demo';                  // 組みこみのデモ（どれも説明用の作り話）
     updateHintLine();
   }
 
@@ -2164,6 +2182,7 @@
 
   function frame() {
     syncBootTail();
+    syncModeTag();
     var b = clock.beats[clock.index];
     if (!b) return;
     if (!st) st = AQ.state.at(fullBeats, b.index);
@@ -2488,7 +2507,18 @@
       el.detailPanel.hidden = true;
     });
 
-    if (el.introBtn) el.introBtn.addEventListener('click', startIntro);
+    /* ★ 2026-11-05（「押しても目に見える反応がない」）: 再生を頭から始めたうえで、
+       「x402 の流れを最初から再生します」と絵の上に出し、絵が画面の外なら見える所まで動かす。 */
+    if (el.introBtn) el.introBtn.addEventListener('click', function () {
+      startIntro();
+      if (!isIntro) return;
+      toast(AQ.i18n.t('x402.introStart'), 4000);
+      var bz = el.canvas && el.canvas.closest ? el.canvas.closest('.bezel') : null;
+      if (bz && bz.getBoundingClientRect) {
+        var r = bz.getBoundingClientRect();
+        if (r.top < 0 || r.top > (window.innerHeight || 800) * 0.6) { try { bz.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* 無視 */ } }
+      }
+    });
 
     el.lang.addEventListener('click', function () { setLang(AQ.i18n.lang === 'ja' ? 'en' : 'ja'); });
     /* 2026-10-16: 右上の「🌐 日本語 / English」。どの画面の上にも出す */
@@ -2618,6 +2648,7 @@
     get jobStory() { return jobStory; },
     get agentStory() { return agentStory; },
     get hasChosen() { return hasChosen; },            /* task 1: まだ誰も選んでいないか（テスト用） */
+    get mode() { return modeNow(); },                 /* 2026-11-05: 札の出し分け（demo / live / log。テスト用） */
     focusOn: handleFocusClick,                        /* テスト・自動操作用（実クリックと同じ経路） */
     focusOnDid: focusByDid,
     watchRoom: watchRoom,                             /* 自分のロボットが書いた部屋を開く（robot.js） */

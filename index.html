@@ -247,6 +247,8 @@
         <div class="quest-win-body" id="questWinBody">
           <div class="owner-warn" id="questWinWarn" role="alert" hidden></div>
           <p class="quest-win-what" id="questWinWhat"></p>
+          <!-- 2026-11-05: まだ遊べないクエストは、説明だけ読める（操作のボタンは出さない） -->
+          <p class="quest-win-lock" id="questWinLock" hidden></p>
           <div class="quest-win-tips"><p id="questWinLearn"></p><p id="questWinCheck"></p></div>
           <div class="quest-win-state" id="questWinState" hidden></div>
           <div class="quest-win-proof" id="questWinProof" hidden></div>
@@ -300,6 +302,8 @@
   <div class="stage-grid" id="stageGrid">
   <section class="bezel">
     <div class="hud">
+      <!-- 2026-11-05: いま見ているのが作り話のデモか・LIVE（本物の掲示板）か・読みこんだ記録かの札。絵の左上の角に貼る（src/main.js syncModeTag） -->
+      <span class="mode-tag" id="modeTag" role="status"></span>
       <span class="g" id="hud-usdc"><i id="usdc-lbl">USDC</i> <b id="usdc">5.000</b></span>
       <span id="hud-credits"><i id="credits-lbl">CREDITS</i> <b id="credits">100</b></span>
       <span id="hud-retries"><i id="retries-lbl">RETRIES</i> <b id="retries">3/3</b></span>

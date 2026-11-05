@@ -76,6 +76,10 @@ Environment variables (all optional):
 | `AQ_SITE_URL` | the public URL, for `og:image`, `canonical` and `security.txt` (`site-url.txt` also works) |
 | `AQ_BASE_APP_ID` | your Base Dashboard App ID, written as `<meta name="base:app_id">` (`base-app-id.txt` also works) |
 
+## License
+
+MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Komainu.
+
 ## Security contact
 
 Please open an issue: https://github.com/Komainu/agent-quest/issues (also in `/.well-known/security.txt`).
@@ -93,3 +97,4 @@ Please open an issue: https://github.com/Komainu/agent-quest/issues (also in `/.
 - 組み立て：`node build.js`。テスト：`npm ci` のあと `npm test`
 - Vercel の環境変数：`AQ_RPC_URL`（自分用の Base の窓口）・`AQ_SITE_URL`（公開先の URL）・`AQ_BASE_APP_ID`（Base Dashboard の App ID）
 - 詳しくは [安全について](https://agent-quest-lilac.vercel.app/safety.html) を見てください
+- ライセンス：MIT です（[LICENSE](LICENSE)・著作権者 Komainu・2026 年）
