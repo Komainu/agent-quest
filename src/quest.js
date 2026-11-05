@@ -323,6 +323,7 @@
     var go = $('questWinGo'); if (go && WIN[id].act) go.textContent = t(WIN[id].act);
     if ((id === 'connect' || id === 'create') && mine()) { var f = $('birthForm'); if (f) f.hidden = true; }
     if (AQ.wizard) AQ.wizard.refresh();
+    focusSoon();
   }
   /* =============================================================
      クリアしたクエストの「成果」（2026-10-18 指摘：クリアしても「クリアしました！」しか出ず、何が起きたか振り返れない）
@@ -466,11 +467,46 @@
     var back = document.querySelector('#questList .quest[data-q="' + was + '"]');   // クエスト帳の、いま閉じたクエストへ戻る
     if (back && back.focus && $('birthScreen') && !$('birthScreen').hidden) back.focus();
   }
+  /* =============================================================
+     2026-11-05 「今押すのはどれか」を、目立たせるボタン1つで伝える（利用者の要望。文字は増やさない）
+       ・クエストの途中：その画面で次に押す金色のボタン（ウィザードの「次へ」があればそれ、
+         なければそのステップの操作ボタン）だけに .q-pulse（光がゆっくり強まったり弱まったり）。
+         窓の下の青い「次のクエスト」は控えめ（枠だけ・CSS で .ready が無いとき）
+       ・クリアしたら：脈打ちは止め、青い「次のクエスト」を塗り＋脈打ち（.ready）に戻す
+     ============================================================= */
+  var PULSE_SKIP = /(?:^|\s)(?:watch-btn|wz-back)(?:\s|$)/;
+  function shown(el) {
+    if (!el || el.hidden || el.disabled || !el.getClientRects().length) return false;
+    var cs = getComputedStyle(el); return cs.visibility !== 'hidden' && cs.display !== 'none';
+  }
+  function pickPrimary(box) {
+    if (box.hidden || box.classList.contains('q-done') || box.classList.contains('q-locked')) return null;
+    var nx = $('wzNext'); if (nx && box.contains(nx) && shown(nx)) return nx;
+    var list = box.querySelectorAll('.quest-win-slot button.go, .quest-win-act button.go, .quest-say-act:not(.nav)');
+    for (var i = 0; i < list.length; i++) {
+      var b = list[i];
+      if (b.id === 'robotWatch' || b.id === 'robotTown' || PULSE_SKIP.test(b.className)) continue;   // 寄り道（部屋で見る・街で見る）は除く
+      if (shown(b)) return b;
+    }
+    return null;
+  }
+  var pulseTm = null;
+  function focusOne() {
+    var box = $('questWin'); if (!box) return;
+    var want = pickPrimary(box);
+    [].forEach.call(document.querySelectorAll('.q-pulse'), function (b) { if (b !== want) b.classList.remove('q-pulse'); });
+    if (want && !want.classList.contains('q-pulse')) want.classList.add('q-pulse');
+  }
+  function focusSoon() { if (pulseTm) return; pulseTm = setTimeout(function () { pulseTm = null; focusOne(); }, 40); }
   function bindWin() {
     var box = $('questWin'); if (!box) return;
     $('questWinClose').addEventListener('click', closeWin);
     $('questWinBack').addEventListener('click', closeWin);
     $('questWinNext').addEventListener('click', function () { var nx = nextOpen(win.id); if (nx) openWin(nx.id); });
+    /* 窓の中のボタンが出たり消えたり、済んだりしたら、目立たせるボタンを選び直す
+       （focusOne は変わるときだけ書き換えるので、自分の付け外しで回り続けることはない） */
+    if (window.MutationObserver) new MutationObserver(focusSoon)
+      .observe(box, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'class', 'disabled'] });
     /* Esc は窓だけを閉じる（フォーカスがどこにあっても。自分のエージェントの画面は閉じない） */
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && win.id && !box.hidden) { ev.stopPropagation(); ev.preventDefault(); closeWin(); } }, true);
     /* 街で見るなどで「自分のエージェント」の画面ごと閉じたら、移したものを元へ戻しておく */
@@ -783,5 +819,5 @@
   }
 
   AQ.quest = { init: init, render: render, refresh: refresh, setFlag: setFlag, count: count, total: QUESTS.length,
-               select: select, open: openWin, close: closeWin, markReturn: markReturn, offerSkip: offerSkip, openCert: openCert, _certPng: certPng, renderStart: renderStart, _hasCode: hasCode, QUESTS: QUESTS };
+               select: select, open: openWin, close: closeWin, markReturn: markReturn, offerSkip: offerSkip, openCert: openCert, _certPng: certPng, renderStart: renderStart, _hasCode: hasCode, _focusOne: focusOne, QUESTS: QUESTS };
 })(window.AQ = window.AQ || {});

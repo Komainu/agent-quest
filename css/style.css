@@ -1867,6 +1867,22 @@ button.wz-chip:hover { background: #193324; }
 .quest-cta b { color: #ffffff; }
 .quest-cta small { color: #b9cdf0; }
 @media (prefers-reduced-motion: reduce) { .quest-win-next.ready, .quest-cta { animation: none; } }
+/* 2026-11-05 「今押すのはどれか」：目立たせるのはいつも1つだけ（文字は増やさない）
+     クエストの途中 … 青い「次のクエスト」は控えめ（細い枠・薄めの字・光も動きもなし。押せるのはそのまま）。
+                      次に押す金のボタン1つだけ（src/quest.js の focusOne が .q-pulse を付ける）が、まわりの光でゆっくり脈打つ
+     クリアしたら   … 金の脈打ちは止まり、青い「次のクエスト」が塗り＋脈打ち（.ready・questNextBlue）に戻る */
+.quest-win-next:not(.ready) { background: transparent; color: rgba(207,224,255,.72); border: 1px solid #3f5f92; font-weight: 600;
+  padding: 9px 15px; box-shadow: none; animation: none; }
+.quest-win-next:not(.ready):hover { background: #16223a; color: #cfe0ff; }
+@media (max-width: 720px) { .quest-win-next:not(.ready) { padding: 10px 11px; } }
+.quest-win .q-pulse { animation: questGoldPulse 2.2s ease-in-out infinite; }
+@keyframes questGoldPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(255,211,107,.35), 0 0 6px 1px rgba(255,211,107,.25); }
+  50%      { box-shadow: 0 0 0 4px rgba(255,211,107,.75), 0 0 18px 5px rgba(255,211,107,.5); } }
+.quest-win.q-done .q-pulse { animation: none; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) {
+  .quest-win .q-pulse { animation: none; box-shadow: 0 0 0 4px rgba(255,211,107,.75), 0 0 16px 4px rgba(255,211,107,.5); }
+  .quest-win.q-done .q-pulse { box-shadow: none; } }
 /* 2026-10-24 クリアしたクエストでは、「やること」の金のボタンを済みの見た目に（二重の取り消し線・落ち着いた緑）。
    もう一度押すこともできる。ほかの仕事の判定（任意）のボタンは対象外 */
 .quest-win.q-done .quest-win-slot button.go:not(.wz-next):not(#robotWatch):not(#robotTown):not(.watch-btn):not(.robot-step-go):not(.robot-yes),

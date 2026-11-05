@@ -15,7 +15,7 @@ const list = [
   'build.js',
   ...checks.map(T),
   T('check-lang.mjs'),
-  ...['quest', 'tech', 'errand', 'social', 'robot', 'birth', 'start', 'safety', 'nowallet'].map(n => T(`shot-${n}.mjs`)),
+  ...['quest', 'tech', 'errand', 'social', 'robot', 'birth', 'start', 'safety', 'nowallet', 'qfocus'].map(n => T(`shot-${n}.mjs`)),
   ...(fs.existsSync(path.join(ROOT, 'test')) ? fs.readdirSync(path.join(ROOT, 'test')) : []).filter(f => /\.test\.mjs$/.test(f)).sort().map(f => path.join('test', f))
 ];
 const only = process.argv.slice(2);
